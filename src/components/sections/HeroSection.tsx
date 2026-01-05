@@ -1,94 +1,73 @@
 import { Button } from "@/components/ui/button";
-import { SectionIndicator } from "@/components/SectionIndicator";
-import { ArrowRight, Layers, Zap } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
+import heroImage from "@/assets/hero-karate.jpg";
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-24">
-      {/* Background glow */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-30"
-        style={{ background: "var(--gradient-glow)" }}
-      />
-      
-      <div className="container relative z-10 max-w-6xl">
-        <SectionIndicator 
-          number="01" 
-          title="Hero Section" 
-          className="mb-8 opacity-0 animate-fade-up" 
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img 
+          src={heroImage} 
+          alt="Karate martial artist in powerful stance"
+          className="w-full h-full object-cover"
         />
-        
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left content */}
-          <div className="space-y-8">
-            <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight opacity-0 animate-fade-up delay-100">
-              Design with
-              <span className="block text-gradient">Precision</span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground max-w-md opacity-0 animate-fade-up delay-200">
-              A wireframe system built for clarity. Every element positioned with intent, every animation crafted for impact.
-            </p>
-            
-            <div className="flex flex-wrap gap-4 opacity-0 animate-fade-up delay-300">
-              <Button variant="hero" size="xl">
-                Get Started
-                <ArrowRight className="ml-2" />
-              </Button>
-              <Button variant="outline" size="xl">
-                View Docs
-              </Button>
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border opacity-0 animate-fade-up delay-400">
-              <div>
-                <div className="text-3xl font-bold text-primary">12</div>
-                <div className="text-sm text-muted-foreground font-mono">Sections</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">8</div>
-                <div className="text-sm text-muted-foreground font-mono">Animations</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">∞</div>
-                <div className="text-sm text-muted-foreground font-mono">Possibilities</div>
-              </div>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50" />
+      </div>
+      
+      <div className="container relative z-10 max-w-6xl px-6 py-24">
+        <div className="max-w-2xl">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-8 opacity-0 animate-fade-up">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm text-primary font-medium">New Classes Starting January 2026</span>
           </div>
           
-          {/* Right - Visual wireframe preview */}
-          <div className="relative opacity-0 animate-slide-right delay-300">
-            <div className="relative aspect-square max-w-md mx-auto">
-              {/* Floating elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-2xl bg-card border border-border card-shadow animate-float delay-100 flex items-center justify-center">
-                <Layers className="w-8 h-8 text-primary" />
-              </div>
-              
-              <div className="absolute bottom-0 left-0 w-40 h-24 rounded-2xl bg-primary/10 border border-primary/30 animate-float delay-300 flex items-center justify-center gap-3">
-                <Zap className="w-6 h-6 text-primary" />
-                <span className="font-mono text-sm text-primary">Animate</span>
-              </div>
-              
-              {/* Central wireframe */}
-              <div className="absolute inset-12 rounded-3xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto rounded-xl bg-secondary flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 w-24 mx-auto bg-muted rounded" />
-                    <div className="h-2 w-16 mx-auto bg-muted/50 rounded" />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Corner accents */}
-              <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-primary rounded-br-lg" />
+          <h1 className="font-display text-6xl md:text-8xl lg:text-9xl leading-[0.9] tracking-wide mb-6 opacity-0 animate-fade-up delay-100">
+            MASTER THE
+            <span className="block text-primary">ART OF</span>
+            <span className="block">KARATE</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground max-w-lg mb-8 opacity-0 animate-fade-up delay-200">
+            Transform your body and mind through traditional martial arts training. 
+            Build discipline, strength, and confidence at Iron Fist Dojo.
+          </p>
+          
+          <div className="flex flex-wrap gap-4 opacity-0 animate-fade-up delay-300">
+            <Button variant="hero" size="xl">
+              Start Your Journey
+              <ArrowRight className="ml-2" />
+            </Button>
+            <Button variant="outline" size="xl" className="group">
+              <Play className="mr-2 w-4 h-4 group-hover:text-primary transition-colors" />
+              Watch Video
+            </Button>
+          </div>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-8 pt-12 mt-12 border-t border-border opacity-0 animate-fade-up delay-400">
+            <div>
+              <div className="font-display text-4xl md:text-5xl text-primary">25+</div>
+              <div className="text-sm text-muted-foreground">Years Experience</div>
+            </div>
+            <div>
+              <div className="font-display text-4xl md:text-5xl text-primary">1,200+</div>
+              <div className="text-sm text-muted-foreground">Students Trained</div>
+            </div>
+            <div>
+              <div className="font-display text-4xl md:text-5xl text-primary">50+</div>
+              <div className="text-sm text-muted-foreground">Black Belts</div>
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 animate-fade-up delay-500">
+        <span className="text-xs text-muted-foreground uppercase tracking-widest">Scroll</span>
+        <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent" />
       </div>
     </section>
   );

@@ -6,40 +6,43 @@ export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl">
       <div className="container max-w-6xl px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <div className="w-4 h-4 rounded border-2 border-primary-foreground" />
+            <div className="w-10 h-10 rounded bg-primary flex items-center justify-center">
+              <span className="font-display text-xl text-primary-foreground">空</span>
             </div>
-            <span className="font-bold text-lg tracking-tight">Wireframe</span>
+            <div>
+              <span className="font-display text-xl tracking-wider">IRON FIST</span>
+              <span className="hidden sm:inline text-muted-foreground text-xs ml-2">DOJO</span>
+            </div>
           </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Components
+            <a href="#programs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Programs
             </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Layouts
+            <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              About
             </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Animations
+            <a href="#schedule" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Schedule
             </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Docs
+            <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Contact
             </a>
           </nav>
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Button variant="ghost" size="sm">
-              Sign In
+              Member Login
             </Button>
             <Button variant="default" size="sm">
-              Get Started
+              Free Trial
             </Button>
           </div>
 
@@ -57,21 +60,21 @@ export const Header = () => {
       {isOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container px-6 py-4 space-y-4">
-            <a href="#" className="block text-sm text-muted-foreground hover:text-foreground">
-              Components
+            <a href="#programs" className="block text-sm text-muted-foreground hover:text-foreground">
+              Programs
             </a>
-            <a href="#" className="block text-sm text-muted-foreground hover:text-foreground">
-              Layouts
+            <a href="#about" className="block text-sm text-muted-foreground hover:text-foreground">
+              About
             </a>
-            <a href="#" className="block text-sm text-muted-foreground hover:text-foreground">
-              Animations
+            <a href="#schedule" className="block text-sm text-muted-foreground hover:text-foreground">
+              Schedule
             </a>
-            <a href="#" className="block text-sm text-muted-foreground hover:text-foreground">
-              Docs
+            <a href="#contact" className="block text-sm text-muted-foreground hover:text-foreground">
+              Contact
             </a>
             <div className="pt-4 border-t border-border space-y-3">
-              <Button variant="outline" className="w-full">Sign In</Button>
-              <Button className="w-full">Get Started</Button>
+              <Button variant="outline" className="w-full">Member Login</Button>
+              <Button className="w-full">Free Trial</Button>
             </div>
           </nav>
         </div>

@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Instrument Sans', 'system-ui', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        display: ['Bebas Neue', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
