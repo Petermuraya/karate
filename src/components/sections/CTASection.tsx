@@ -1,98 +1,59 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MapPin, Phone, Mail } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { MessageCircle, Mail, ArrowRight } from "lucide-react";
 
 export const CTASection = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
   return (
-    <section id="contact" className="relative px-6 py-32">
-      <div className="container max-w-6xl">
-        <div className="relative rounded-3xl bg-card border border-border overflow-hidden">
-          {/* Background glow */}
-          <div 
-            className="absolute top-0 right-0 w-1/2 h-full opacity-30"
-            style={{ background: "var(--gradient-glow)" }}
-          />
-          
-          <div className="relative z-10 grid lg:grid-cols-2 gap-12 p-12 md:p-16">
-            {/* Left - CTA */}
-            <div className="space-y-6">
-              <span className="text-primary font-medium text-sm uppercase tracking-widest">
-                Begin Your Training
-              </span>
-              
-              <h2 className="font-display text-5xl md:text-6xl">
-                YOUR FIRST CLASS IS <span className="text-primary">FREE</span>
-              </h2>
-              
-              <p className="text-lg text-muted-foreground">
-                Experience the Iron Fist difference. Join us for a free trial class and discover 
-                why hundreds of students have chosen our dojo for their martial arts journey.
-              </p>
-              
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button variant="glow" size="xl">
-                  Claim Free Trial
-                  <ArrowRight className="ml-2" />
-                </Button>
-                <Button variant="outline" size="lg">
-                  Call Us Now
-                </Button>
-              </div>
-            </div>
+    <section id="contact" className="relative overflow-hidden" ref={ref}>
+      {/* Red background CTA */}
+      <div className="bg-primary section-padding">
+        <div className="container-custom text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="font-display text-5xl md:text-6xl lg:text-7xl text-primary-foreground mb-6">
+              TRAIN WITH PURPOSE
+            </h2>
             
-            {/* Right - Contact Info */}
-            <div className="space-y-6 lg:pl-12 lg:border-l border-border">
-              <h3 className="font-display text-2xl">VISIT THE DOJO</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Location</div>
-                    <div className="text-muted-foreground">
-                      1234 Warrior Way, Suite 100<br />
-                      Los Angeles, CA 90001
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Phone</div>
-                    <div className="text-muted-foreground">(555) 123-4567</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Email</div>
-                    <div className="text-muted-foreground">info@ironfistdojo.com</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t border-border">
-                <div className="text-sm text-muted-foreground mb-2">Hours</div>
-                <div className="text-sm">
-                  <span className="text-foreground">Mon-Fri:</span> 4:00 PM - 9:00 PM<br />
-                  <span className="text-foreground">Saturday:</span> 9:00 AM - 2:00 PM<br />
-                  <span className="text-foreground">Sunday:</span> Closed
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Corner decorations */}
-          <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-primary/30 rounded-tl-xl" />
-          <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-primary/30 rounded-br-xl" />
+            <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-10">
+              Your first class is free. Experience the Iron Fist difference and begin your martial arts journey today.
+            </p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col sm:flex-row justify-center gap-4"
+            >
+              <Button variant="dark" size="xl" className="group">
+                <MessageCircle className="mr-2 w-5 h-5" />
+                WhatsApp
+                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+              <Button 
+                size="xl" 
+                className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              >
+                <Mail className="mr-2 w-5 h-5" />
+                Email Us
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
+      </div>
+
+      {/* Sticky mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border p-4">
+        <Button variant="hero" size="lg" className="w-full">
+          Claim Free Trial
+          <ArrowRight className="ml-2" />
+        </Button>
       </div>
     </section>
   );

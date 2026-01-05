@@ -1,8 +1,11 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { InstructorSection } from "@/components/sections/InstructorSection";
+import { PhilosophySection } from "@/components/sections/PhilosophySection";
+import { BeltProgressionSection } from "@/components/sections/BeltProgressionSection";
 import { ProgramsSection } from "@/components/sections/ProgramsSection";
-import { AboutSection } from "@/components/sections/AboutSection";
+import { GallerySection } from "@/components/sections/GallerySection";
 import { ScheduleSection } from "@/components/sections/ScheduleSection";
 import { CTASection } from "@/components/sections/CTASection";
 
@@ -12,8 +15,11 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <InstructorSection />
+        <PhilosophySection />
+        <BeltProgressionSection />
         <ProgramsSection />
-        <AboutSection />
+        <GallerySection />
         <ScheduleSection />
         <CTASection />
       </main>
