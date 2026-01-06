@@ -14,16 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      announcements: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_published: boolean | null
+          priority: string | null
+          title: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          priority?: string | null
+          title: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          priority?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      attendance: {
+        Row: {
+          attended_at: string
+          class_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attended_at?: string
+          class_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attended_at?: string
+          class_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          day_of_week: string
+          description: string | null
+          end_time: string
+          id: string
+          instructor_id: string | null
+          is_active: boolean | null
+          level: string | null
+          location: string
+          program: string
+          start_time: string
+          title: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          day_of_week: string
+          description?: string | null
+          end_time: string
+          id?: string
+          instructor_id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          location: string
+          program: string
+          start_time: string
+          title: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          day_of_week?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          instructor_id?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          location?: string
+          program?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          belt_rank: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          location: string | null
+          phone: string | null
+          program: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          belt_rank?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          program?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          belt_rank?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          location?: string | null
+          phone?: string | null
+          program?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "instructor" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +355,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "instructor", "student"],
+    },
   },
 } as const

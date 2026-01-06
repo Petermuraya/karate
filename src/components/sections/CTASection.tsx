@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { MessageCircle, Mail, ArrowRight } from "lucide-react";
 
 export const CTASection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  const whatsappNumber = '+254700000000';
 
   return (
     <section id="contact" className="relative overflow-hidden" ref={ref}>
@@ -31,18 +34,26 @@ export const CTASection = () => {
               transition={{ delay: 0.2 }}
               className="flex flex-col sm:flex-row justify-center gap-4"
             >
-              <Button variant="dark" size="xl" className="group">
-                <MessageCircle className="mr-2 w-5 h-5" />
-                WhatsApp
-                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button 
-                size="xl" 
-                className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              <a
+                href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Mail className="mr-2 w-5 h-5" />
-                Email Us
-              </Button>
+                <Button variant="dark" size="xl" className="group w-full sm:w-auto">
+                  <MessageCircle className="mr-2 w-5 h-5" />
+                  WhatsApp
+                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </a>
+              <a href="mailto:info@ironfistdojo.com">
+                <Button 
+                  size="xl" 
+                  className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary w-full sm:w-auto"
+                >
+                  <Mail className="mr-2 w-5 h-5" />
+                  Email Us
+                </Button>
+              </a>
             </motion.div>
           </motion.div>
         </div>
@@ -50,10 +61,12 @@ export const CTASection = () => {
 
       {/* Sticky mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border p-4">
-        <Button variant="hero" size="lg" className="w-full">
-          Claim Free Trial
-          <ArrowRight className="ml-2" />
-        </Button>
+        <Link to="/auth">
+          <Button variant="hero" size="lg" className="w-full">
+            Claim Free Trial
+            <ArrowRight className="ml-2" />
+          </Button>
+        </Link>
       </div>
     </section>
   );
