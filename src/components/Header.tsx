@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +18,11 @@ export const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <motion.header
@@ -27,7 +36,7 @@ export const Header = () => {
       <div className="container-custom px-6 md:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group">
             <div className="w-12 h-12 bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
               <span className="font-display text-2xl text-primary-foreground font-bold">鉄</span>
             </div>
@@ -35,7 +44,7 @@ export const Header = () => {
               <span className="font-display text-xl tracking-widest">IRON FIST</span>
               <span className="block text-xs text-muted-foreground tracking-[0.3em]">DOJO</span>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-10">
@@ -51,14 +60,34 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* CTA */}
+          {/* CTA / Auth */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="outline" size="sm">
-              Login
-            </Button>
-            <Button variant="default" size="sm">
-              Free Trial
-            </Button>
+            {user ? (
+              <>
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="w-4 h-4" />
+                    {profile?.full_name?.split(' ')[0] || 'Dashboard'}
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="default" size="sm">
+                    Free Trial
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -96,8 +125,28 @@ export const Header = () => {
                 </motion.a>
               ))}
               <div className="pt-4 border-t border-border flex flex-col gap-3">
-                <Button variant="outline" className="w-full">Login</Button>
-                <Button className="w-full">Free Trial</Button>
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full gap-2">
+                        <User className="w-4 h-4" />
+                        My Dashboard
+                      </Button>
+                    </Link>
+                    <Button variant="ghost" className="w-full" onClick={handleSignOut}>
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full">Free Trial</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>
