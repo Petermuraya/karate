@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Mail, Phone, Video } from 'lucide-react';
+import { MessageCircle, Mail, Phone, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export function QuickActions() {
   const whatsappNumber = '+254700000000'; // Replace with actual number
@@ -42,16 +43,12 @@ export function QuickActions() {
           </Button>
         </a>
 
-        <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2" disabled>
-          <Video className="w-5 h-5 text-muted-foreground" />
-          <span className="text-xs">Training Videos</span>
-        </Button>
-      </div>
-
-      <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-        <p className="text-xs text-muted-foreground text-center">
-          Training video library coming soon! 🥋
-        </p>
+        <Link to="/videos">
+          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2 hover:border-primary/50 hover:bg-primary/5">
+            <Film className="w-5 h-5 text-primary" />
+            <span className="text-xs">Training Videos</span>
+          </Button>
+        </Link>
       </div>
     </motion.div>
   );
