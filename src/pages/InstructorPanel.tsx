@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, Megaphone, UserCheck, BarChart3, ShieldCheck } from 'lucide-react';
+import DashboardSwitcher from '@/components/admin/DashboardSwitcher';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
@@ -62,6 +63,9 @@ export default function InstructorPanel() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <div className="hidden sm:block">
+                <DashboardSwitcher current="instructor" />
+              </div>
               <Link to="/instructor/profile">
                 <Button variant="ghost" size="sm">
                   <Calendar className="w-4 h-4 mr-2" />
