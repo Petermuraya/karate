@@ -34,8 +34,8 @@ export function ProgressCard() {
         <Award className="w-5 h-5 text-gold" />
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
-        <div className={`w-12 h-12 rounded-lg ${currentBelt.color} flex items-center justify-center shadow-lg`}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+        <div className={`w-12 h-12 rounded-lg ${currentBelt.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
           {currentBelt.name === 'Black' && (
             <span className="text-white font-display text-sm">黒</span>
           )}
@@ -63,19 +63,21 @@ export function ProgressCard() {
       </div>
 
       {/* Belt Progression */}
-      <div className="flex justify-between mt-6">
-        {beltProgression.map((belt, index) => (
-          <div key={belt.name} className="flex flex-col items-center">
-            <div 
-              className={`w-6 h-6 rounded ${belt.color} ${
-                index <= currentBelt.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'opacity-40'
-              }`}
-            />
-            <span className="text-xs text-muted-foreground mt-1 hidden sm:block">
-              {belt.name.slice(0, 2)}
-            </span>
-          </div>
-        ))}
+      <div className="mt-6">
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {beltProgression.map((belt, index) => (
+            <div key={belt.name} className="flex flex-col items-center min-w-[40px]">
+              <div 
+                className={`w-6 h-6 rounded ${belt.color} ${
+                  index <= currentBelt.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'opacity-40'
+                }`}
+              />
+              <span className="text-xs text-muted-foreground mt-1 hidden sm:block text-center">
+                {belt.name.slice(0, 2)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {nextBelt && (
