@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,9 +35,33 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
+    if (!user) return;
+
+    // Role-aware redirect: instructors/admins -> instructor panel, students -> onboarding/dashboard
+    const roleAwareRedirect = async () => {
+      try {
+        const { data: userRow } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle();
+        const role = (userRow && (userRow as any).role) || null;
+
+        if (role === 'instructor' || role === 'admin') {
+          navigate('/instructor');
+          return;
+        }
+
+        // Otherwise check students row
+        const { data } = await supabase.from('students').select('id').eq('user_id', user.id).maybeSingle();
+        if (data) {
+          navigate('/dashboard');
+        } else {
+          navigate('/onboarding');
+        }
+      } catch (err) {
+        // fallback
+        navigate('/dashboard');
+      }
+    };
+
+    roleAwareRedirect();
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,6 +104,20 @@ export default function Auth() {
             title: 'Welcome to Iron Fist Dojo!',
             description: 'Your account has been created. Redirecting to dashboard...'
           });
+          // Attempt to sign in immediately so we can send the user to onboarding
+          const { error: signInError } = await signIn(email, password);
+          if (!signInError) {
+            // Signed in successfully — send to onboarding to complete profile
+            navigate('/onboarding');
+            return;
+          } else {
+            // If automatic sign-in fails (email confirmation required), instruct user
+            toast({
+              title: 'Check your email',
+              description: 'Please confirm your email address to complete registration.',
+              variant: 'default'
+            });
+          }
         }
       } else {
         const result = signInSchema.safeParse({ email, password });
