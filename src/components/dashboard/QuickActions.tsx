@@ -19,9 +19,9 @@ export function QuickActions() {
     >
       <h2 className="font-display text-xl text-foreground tracking-wide mb-6">QUICK ACTIONS</h2>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {isInstructor && (
-          <Link to="/instructor" className="col-span-2">
+          <Link to="/instructor" className="col-span-1 sm:col-span-2">
             <Button className="w-full h-auto py-4 flex gap-2 bg-gradient-to-r from-primary to-gold hover:opacity-90">
               <ShieldCheck className="w-5 h-5" />
               <span>Instructor Panel</span>
