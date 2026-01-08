@@ -61,6 +61,20 @@ export default function InstructorPanel() {
                 <p className="text-sm text-muted-foreground">Manage your dojo</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Link to="/instructor/profile">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </Link>
+              <Link to="/instructor/classes">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Manage Timetable
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
