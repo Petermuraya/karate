@@ -2,16 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotifications, useMarkNotificationRead, useUnreadCount } from '@/hooks/useNotifications';
+import useNotifications from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Bell, Menu, X, LogOut, User, Home } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export function DashboardHeader() {
   const { profile, signOut } = useAuth();
-  const { data: notifications } = useNotifications();
-  const markRead = useMarkNotificationRead();
-  const unreadCount = useUnreadCount();
+  const { notifications, markAsRead } = useNotifications();
+  const unreadCount = (notifications || []).filter((n: any) => !n.is_read).length;
   const navigate = useNavigate();
   
   const [showNotifications, setShowNotifications] = useState(false);
@@ -22,8 +21,12 @@ export function DashboardHeader() {
     navigate('/');
   };
 
-  const handleNotificationClick = (id: string) => {
-    markRead.mutate(id);
+  const handleNotificationClick = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (e) {
+      console.error('Failed to mark notification read', e);
+    }
   };
 
   const getBeltColor = (belt: string) => {
@@ -98,7 +101,7 @@ export function DashboardHeader() {
                             }`}
                           >
                             <p className="font-medium text-foreground text-sm">{notification.title}</p>
-                            <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{notification.message}</p>
+                            <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{notification.message ?? notification.body}</p>
                             <p className="text-muted-foreground text-xs mt-2">
                               {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                             </p>
