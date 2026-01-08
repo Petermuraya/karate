@@ -3,13 +3,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Award, TrendingUp } from 'lucide-react';
 
 const beltProgression = [
-  { name: 'White', color: 'bg-white border border-border', value: 0 },
-  { name: 'Yellow', color: 'bg-yellow-400', value: 1 },
-  { name: 'Orange', color: 'bg-orange-500', value: 2 },
-  { name: 'Green', color: 'bg-green-500', value: 3 },
-  { name: 'Blue', color: 'bg-blue-500', value: 4 },
-  { name: 'Brown', color: 'bg-amber-700', value: 5 },
-  { name: 'Black', color: 'bg-black', value: 6 }
+  { name: 'White belt', color: 'bg-white border border-border', value: 0 },
+  { name: 'Yellow belt', color: 'bg-yellow-400', value: 1 },
+  { name: 'Orange belt', color: 'bg-orange-500', value: 2 },
+  { name: 'Purple belt', color: 'bg-violet-600 text-white', value: 3 },
+  { name: 'Green belt', color: 'bg-green-500', value: 4 },
+  { name: 'Brown belt', color: 'bg-amber-700', value: 5 },
+  { name: 'Black belt', color: 'bg-black text-white', value: 6 }
 ];
 
 export function ProgressCard() {
