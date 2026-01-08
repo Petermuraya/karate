@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -93,8 +93,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     });
-    
-    return { error };
+
+    if (error) return { error };
+
+    // If a user object is returned immediately, create a profiles row for the new user.
+    const userId = data?.user?.id;
+    try {
+      if (userId) {
+          await supabase.from('profiles').upsert({
+            user_id: userId,
+            full_name: fullName,
+            email
+          }, { onConflict: 'user_id' });
+
+          // Ensure a row exists in the application `users` table with default role 'student'
+          try {
+            await supabase.from('users').upsert({
+              id: userId,
+              email,
+              role: 'student',
+              name: fullName
+            }, { onConflict: 'id' });
+          } catch (err) {
+            // non-fatal
+            // eslint-disable-next-line no-console
+            console.warn('Failed to upsert user row on signUp', err);
+          }
+        }
+    } catch (err) {
+      // non-fatal: profile creation can be retried later via refreshProfile
+      // eslint-disable-next-line no-console
+      console.warn('Failed to create profile row on signUp', err);
+    }
+
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
