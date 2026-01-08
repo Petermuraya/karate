@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   }, [sidebarOpen]);
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sidebar for large screens */}
         <div className="hidden lg:block lg:col-span-3">
           <AdminSidebar />
@@ -121,26 +121,28 @@ export default function AdminDashboard() {
         </AnimatePresence>
 
         <div className="lg:col-span-9 space-y-6">
-          <header className="flex items-center justify-between">
-            <div className="flex items-center gap-3 lg:hidden">
-              <button
-                aria-label="Open menu"
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-md bg-card border border-border"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
-            <div>
-              <h1 className="font-display text-3xl text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage classes, users, notifications, and reports</p>
+          <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="sm:hidden">
+                <button
+                  aria-label="Open menu"
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 rounded-md bg-card border border-border"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+              <div>
+                <h1 className="font-display text-2xl sm:text-3xl text-foreground">Admin Dashboard</h1>
+                <p className="text-muted-foreground mt-1 text-sm">Manage classes, users, notifications, and reports</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:block">
                 <DashboardSwitcher current="admin" />
               </div>
-              <Button variant="ghost">Import</Button>
-              <Button>New</Button>
+              <Button variant="ghost" size="sm">Import</Button>
+              <Button size="sm">New</Button>
             </div>
           </header>
 
@@ -212,7 +214,9 @@ export default function AdminDashboard() {
                 <h2 className="font-display text-lg text-foreground">Manage Classes</h2>
                 <Link to="/admin/classes" className="text-sm text-primary">Open Class Manager →</Link>
               </div>
-              <ClassManager />
+              <div className="overflow-auto max-h-[60vh]">
+                <ClassManager />
+              </div>
             </div>
           </section>
         </div>
