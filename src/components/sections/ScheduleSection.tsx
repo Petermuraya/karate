@@ -55,20 +55,18 @@ export const ScheduleSection = () => {
             </h3>
             {locations.map((location, index) => (
               <motion.div
-                key={location.name}
-                initial={{ opacity: 0, x: -20 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ x: 8 }}
-                className="bg-card border border-border p-6 hover:border-primary/50 transition-all cursor-pointer group"
-              >
-                <h4 className="font-display text-lg text-primary mb-2">{location.name}</h4>
-                <p className="text-sm text-muted-foreground">{location.address}</p>
-                <p className="text-sm text-muted-foreground">{location.city}</p>
-                <p className="text-sm text-foreground mt-2">{location.phone}</p>
-                
-                {/* Pulse on hover */}
-                <motion.div
+            const { data: classesData } = useClasses();
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const grouped: Record<string, any[]> = {};
+            days.forEach(d => grouped[d] = []);
+            const locationsSet = new Set<string>();
+            (classesData || []).forEach((c: any) => {
+              const day = c.day_of_week || (new Date(c.date_time).toLocaleDateString(undefined, { weekday: 'long' }));
+              grouped[day] = grouped[day] || [];
+              grouped[day].push({ time: c.start_time || new Date(c.date_time).toLocaleTimeString(), name: c.title, location: c.location });
+              if (c.location) locationsSet.add(c.location);
+            });
+            const locations = Array.from(locationsSet).slice(0,6).map(l => ({ name: l, address: l, city: '', phone: '' }));
                   className="w-3 h-3 bg-primary rounded-full mt-4"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
