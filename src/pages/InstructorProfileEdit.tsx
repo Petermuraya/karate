@@ -1,196 +1,209 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InstructorProfileEdit(): JSX.Element {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
-  const [level, setLevel] = useState('');
-  const [bio, setBio] = useState('');
-  const [historyFiles, setHistoryFiles] = useState<File[]>([]);
-  const [historyPreviews, setHistoryPreviews] = useState<string[]>([]);
+  const [fullName, setFullName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const avatarRef = useRef<HTMLInputElement | null>(null);
-  const historyRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!user) return navigate('/auth');
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     if (profile) {
       setPhone(profile.phone || '');
+      setFullName(profile.full_name || '');
       setAvatarPreview(profile.avatar_url || null);
     }
-    // load instructor row if exists
-    (async () => {
-      if (!user) return;
-      const { data } = await supabase.from('instructors').select('*').eq('user_id', user.id).maybeSingle();
-      if (data) {
-        setBio(data.bio || '');
-        // use certifications to store history image urls (if present)
-        if (Array.isArray(data.certifications)) {
-          setHistoryPreviews(data.certifications as string[]);
-        }
-      }
-    })();
   }, [user, profile, navigate]);
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    setAvatarFile(f);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(String(reader.result));
-    reader.readAsDataURL(f);
-  }
-
-  function handleHistoryFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files ? Array.from(e.target.files) : [];
-    if (!files.length) return;
-    setHistoryFiles((prev) => [...prev, ...files]);
-    files.forEach((f) => {
-      const r = new FileReader();
-      r.onload = () => setHistoryPreviews((p) => [...p, String(r.result)]);
-      r.readAsDataURL(f);
-    });
-  }
-
-  function removeHistoryPreview(index: number) {
-    setHistoryPreviews((p) => p.filter((_, i) => i !== index));
-    setHistoryFiles((f) => f.filter((_, i) => i !== index));
+    reader.readAsDataURL(file);
   }
 
   async function handleSave() {
     if (!user) return;
     setSaving(true);
-    setStatus(null);
+
     try {
-      // Upload avatar
       let avatarUrl = profile?.avatar_url ?? null;
+
+      // Upload avatar if changed
       if (avatarFile) {
-        const path = `instructors/${user.id}/avatar_${Date.now()}_${avatarFile.name}`;
-        const { error: upErr } = await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-        avatarUrl = data.publicUrl;
-      }
+        const path = `avatars/${user.id}/${Date.now()}_${avatarFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, avatarFile, { upsert: true });
 
-      // Upload history images to 'instructor-history' bucket
-      const uploadedHistoryUrls: string[] = [];
-      for (const f of historyFiles) {
-        const path = `instructors/${user.id}/history/${Date.now()}_${f.name}`;
-        const { error } = await supabase.storage.from('instructor-history').upload(path, f, { upsert: true });
-        if (error) {
-          console.warn('history upload error', error);
-          continue;
-        }
-        const { data } = supabase.storage.from('instructor-history').getPublicUrl(path);
-        uploadedHistoryUrls.push(data.publicUrl);
-      }
-
-      // Upsert profile avatar and phone
-      await supabase.from('profiles').upsert({ user_id: user.id, phone: phone.replace(/\D/g, ''), avatar_url: avatarUrl }, { onConflict: 'user_id' });
-
-      // Upsert instructors row (store bio on instructors table)
-      const { data: instr } = await supabase.from('instructors').select('*').eq('user_id', user.id).maybeSingle();
-      let instructorId: string;
-      if (instr) {
-        instructorId = instr.id;
-        await supabase.from('instructors').update({ bio, verified: instr.verified ?? false }).eq('user_id', user.id);
-      } else {
-        const { data: created } = await supabase.from('instructors').insert({ user_id: user.id, bio }).select().single();
-        instructorId = created.id;
-      }
-
-      // Record history images in instructor_history table instead of instructors.certifications
-      const previewUrls = historyPreviews.filter(u => u.startsWith('http'));
-      const allUrls = [...uploadedHistoryUrls, ...previewUrls];
-      if (allUrls.length) {
-        // Find existing entries to avoid duplicates
-        const { data: existing } = await supabase.from('instructor_history').select('image_url').eq('instructor_id', instructorId).in('image_url', allUrls as string[]);
-        const existingSet = new Set((existing || []).map((r: any) => r.image_url));
-        const toInsert = allUrls.filter((u) => !existingSet.has(u)).map((url) => ({ instructor_id: instructorId, image_url: url, uploaded_by: user.id }));
-        if (toInsert.length) {
-          await supabase.from('instructor_history').insert(toInsert);
+        if (uploadError) {
+          console.error('Avatar upload error:', uploadError);
+          toast({ title: 'Avatar upload failed', description: 'Check if storage bucket exists', variant: 'destructive' });
+        } else {
+          const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+          avatarUrl = data.publicUrl;
         }
       }
+
+      // Update profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          phone: phone.replace(/\D/g, ''),
+          avatar_url: avatarUrl
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
 
       await refreshProfile();
-      setStatus('Profile saved');
-      setHistoryFiles([]);
+      toast({ title: 'Profile updated successfully!' });
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('save instructor profile', err);
-      setStatus('Failed to save profile (check storage buckets exist)');
+      console.error('Save error:', err);
+      toast({ title: 'Failed to save profile', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-card rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">Edit Instructor Profile</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-1">
-            <div className="w-40 h-40 bg-gray-800 rounded-full overflow-hidden mb-4">
-              {avatarPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted">No photo</div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => avatarRef.current?.click()} className="px-3 py-2 bg-primary rounded">Upload Avatar</button>
-              <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              <button onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} className="px-3 py-2 bg-gray-700 rounded">Remove</button>
-            </div>
-            <div className="mt-6">
-              <label className="text-sm text-muted">Phone</label>
-              <input className="w-full mt-1 p-2 bg-input rounded" value={phone} onChange={(e) => setPhone(e.target.value)} />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <Link to="/instructor">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="font-display text-xl text-foreground flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" />
+                EDIT PROFILE
+              </h1>
+              <p className="text-sm text-muted-foreground">Update your instructor profile</p>
             </div>
           </div>
+        </div>
+      </header>
 
-          <div className="col-span-2">
-            <label className="text-sm text-muted">Level (e.g. 2nd Dan)</label>
-            <input className="w-full mt-1 p-2 bg-input rounded mb-4" value={level} onChange={(e) => setLevel(e.target.value)} placeholder="e.g. 2nd Dan" />
-
-            <label className="text-sm text-muted">Bio</label>
-            <textarea className="w-full mt-1 p-2 bg-input rounded h-32" value={bio} onChange={(e) => setBio(e.target.value)} />
-
-            <div className="mt-4">
-              <label className="text-sm text-muted">History Images (add multiple)</label>
-              <div className="flex gap-2 mt-2">
-                <button onClick={() => historyRef.current?.click()} className="px-3 py-2 bg-primary rounded">Add Images</button>
-                <input ref={historyRef} type="file" accept="image/*" multiple className="hidden" onChange={handleHistoryFiles} />
-                <div className="text-sm text-muted">You can add multiple photos of achievements, history, etc.</div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {historyPreviews.map((src, idx) => (
-                  <div key={idx} className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`history-${idx}`} className="w-full h-24 object-cover rounded" />
-                    <button onClick={() => removeHistoryPreview(idx)} className="absolute top-1 right-1 bg-red-600 text-white px-2 py-1 rounded text-xs">Remove</button>
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Avatar Section */}
+            <div className="text-center">
+              <div className="w-40 h-40 mx-auto bg-secondary rounded-full overflow-hidden mb-4 border-4 border-primary/20">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-16 h-16 text-muted-foreground" />
                   </div>
-                ))}
+                )}
+              </div>
+              <div className="flex justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => avatarRef.current?.click()}
+                >
+                  Upload Photo
+                </Button>
+                <input
+                  ref={avatarRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                {avatarPreview && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Form Section */}
+            <div className="md:col-span-2 space-y-6">
+              <div>
+                <label className="text-sm text-muted-foreground">Full Name</label>
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  placeholder="Your full name"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Email</label>
+                <input
+                  value={profile?.email || ''}
+                  disabled
+                  className="w-full mt-1 p-3 bg-secondary/50 border border-border rounded-lg text-muted-foreground cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Phone Number</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  placeholder="Your phone number"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="hero"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/instructor')}
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="mt-6 flex items-center gap-3">
-          <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-yellow-600 text-black rounded">{saving ? 'Saving...' : 'Save Changes'}</button>
-          <button onClick={() => navigate('/instructor')} className="px-3 py-2 bg-gray-700 rounded">Cancel</button>
-          {status && <div className="text-sm text-muted ml-2">{status}</div>}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -37,20 +37,31 @@ export default function Auth() {
   useEffect(() => {
     if (!user) return;
 
-    // Role-aware redirect: instructors/admins -> instructor panel, students -> onboarding/dashboard
+    // Role-aware redirect using user_roles table
     const roleAwareRedirect = async () => {
       try {
-        const { data: userRow } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle();
-        const role = (userRow && (userRow as any).role) || null;
+        // Check for instructor or admin role
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        const role = roleData?.role;
 
         if (role === 'instructor' || role === 'admin') {
           navigate('/instructor');
           return;
         }
 
-        // Otherwise check students row
-        const { data } = await supabase.from('students').select('id').eq('user_id', user.id).maybeSingle();
-        if (data) {
+        // Check if profile is complete
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('program, belt_rank')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profileData && profileData.program) {
           navigate('/dashboard');
         } else {
           navigate('/onboarding');
@@ -102,16 +113,14 @@ export default function Auth() {
         } else {
           toast({
             title: 'Welcome to Iron Fist Dojo!',
-            description: 'Your account has been created. Redirecting to dashboard...'
+            description: 'Your account has been created. Redirecting to setup...'
           });
-          // Attempt to sign in immediately so we can send the user to onboarding
+          // Attempt to sign in immediately
           const { error: signInError } = await signIn(email, password);
           if (!signInError) {
-            // Signed in successfully — send to onboarding to complete profile
             navigate('/onboarding');
             return;
           } else {
-            // If automatic sign-in fails (email confirmation required), instruct user
             toast({
               title: 'Check your email',
               description: 'Please confirm your email address to complete registration.',

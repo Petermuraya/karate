@@ -1,213 +1,299 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Plus, Trash2, Calendar } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-function isoLocal(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00Z`;
-}
-
-function makeICS(event: { title: string; description?: string; location?: string; start: Date; end: Date; uid?: string }) {
-  const start = event.start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  const end = event.end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  const uid = event.uid || `${Date.now()}@karate.local`;
-  return `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//karate-app//EN\nBEGIN:VEVENT\nUID:${uid}\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').split('.')[0]}Z\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:${event.title}\nDESCRIPTION:${(event.description||'').replace(/\n/g,'\\n')}\nLOCATION:${event.location||''}\nEND:VEVENT\nEND:VCALENDAR`;
+interface ClassItem {
+  id: string;
+  title: string;
+  program: string;
+  location: string;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  capacity: number | null;
+  is_active: boolean | null;
 }
 
 export default function InstructorManageClasses() {
   const { user } = useAuth();
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
-  const [form, setForm] = useState({ title: '', program: 'adults', location: '', weekday: 1, start_time: '18:00', duration_minutes: 60, capacity: 20, is_recurring: true });
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({
+    title: '',
+    program: 'adults',
+    location: '',
+    day_of_week: 'Monday',
+    start_time: '18:00',
+    end_time: '19:00',
+    capacity: 20
+  });
 
   useEffect(() => {
-    if (!user) return;
-    loadTemplates();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     loadClasses();
-  }, [user]);
-
-  async function loadTemplates() {
-    const { data } = await supabase.from('class_templates').select('*').eq('instructor_id', user?.id).order('created_at', { ascending: false });
-    setTemplates((data as any[]) || []);
-  }
+  }, [user, navigate]);
 
   async function loadClasses() {
-    const { data } = await supabase.from('classes').select('*').eq('instructor_id', user?.id).order('date_time', { ascending: true });
-    setClasses((data as any[]) || []);
-  }
-
-  function nextDatesForWeekday(weekday: number, timeH: number, timeM: number, occurrences = 12) {
-    const out: Date[] = [];
-    const now = new Date();
-    let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeH, timeM, 0, 0);
-    // move cursor to the next weekday
-    while (cursor.getDay() !== weekday) cursor.setDate(cursor.getDate() + 1);
-    // if in the past today, move to next week
-    if (cursor.getTime() < now.getTime()) cursor.setDate(cursor.getDate() + 7);
-    for (let i=0;i<occurrences;i++) {
-      out.push(new Date(cursor));
-      cursor.setDate(cursor.getDate() + 7);
-    }
-    return out;
-  }
-
-  async function createTemplate() {
-    if (!user) return alert('Not signed in');
     try {
-      const t = { ...form, instructor_id: user.id };
-      const { data: created } = await supabase.from('class_templates').insert(t).select().single();
-      if (!created) throw new Error('create failed');
-      // generate upcoming occurrences (next 12 weeks)
-      const [h, m] = form.start_time.split(':').map(Number);
-      const dates = nextDatesForWeekday(Number(form.weekday), h, m, 12);
-      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const insertClasses = dates.map(d => {
-        const start = d;
-        const end = new Date(start.getTime() + (form.duration_minutes||60)*60000);
-        return ({
-          instructor_id: user.id,
-          title: form.title,
-          program: form.program,
-          location: form.location,
-          date_time: start.toISOString(),
-          day_of_week: dayNames[start.getDay()],
-          start_time: `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}`,
-          end_time: `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`,
-          capacity: form.capacity,
-          duration_minutes: form.duration_minutes,
-          is_published: true,
-          is_active: true
-        })
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('instructor_id', user?.id)
+        .order('day_of_week');
+      
+      if (error) throw error;
+      setClasses(data || []);
+    } catch (err) {
+      console.error('Error loading classes:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function createClass() {
+    if (!user) return;
+    if (!form.title || !form.location) {
+      toast({ title: 'Please fill in all fields', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('classes').insert({
+        ...form,
+        instructor_id: user.id,
+        is_active: true
       });
-      await supabase.from('classes').insert(insertClasses);
-      setForm({ title: '', program: 'adults', location: '', weekday: 1, start_time: '18:00', duration_minutes: 60, capacity: 20, is_recurring: true });
-      await loadTemplates();
+
+      if (error) throw error;
+
+      toast({ title: 'Class created successfully!' });
+      setForm({
+        title: '',
+        program: 'adults',
+        location: '',
+        day_of_week: 'Monday',
+        start_time: '18:00',
+        end_time: '19:00',
+        capacity: 20
+      });
       await loadClasses();
-      alert('Template created and upcoming classes generated');
     } catch (err) {
-      console.error(err);
-      alert('Failed to create template');
+      console.error('Error creating class:', err);
+      toast({ title: 'Failed to create class', variant: 'destructive' });
     }
   }
 
-  async function deleteTemplate(id: string) {
-    if (!confirm('Delete template and all generated upcoming classes?')) return;
+  async function toggleActive(classItem: ClassItem) {
     try {
-      // remove template
-      await supabase.from('class_templates').delete().eq('id', id);
-      // remove future classes created for this template: we don't have a template_id on classes, so as a simple heuristic delete classes with same title and instructor in future
-      const now = new Date().toISOString();
-      await supabase.from('classes').delete().eq('instructor_id', user?.id).eq('title', templates.find(t=>t.id===id)?.title).gt('date_time', now);
-      await loadTemplates();
+      const { error } = await supabase
+        .from('classes')
+        .update({ is_active: !classItem.is_active })
+        .eq('id', classItem.id);
+
+      if (error) throw error;
       await loadClasses();
     } catch (err) {
-      console.error(err);
-      alert('Failed to delete template');
+      console.error('Error toggling class:', err);
     }
   }
 
-  async function publishClass(c: any) {
+  async function deleteClass(id: string) {
+    if (!confirm('Are you sure you want to delete this class?')) return;
+
     try {
-      await supabase.from('classes').update({ is_published: !c.is_published }).eq('id', c.id);
+      const { error } = await supabase.from('classes').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Class deleted' });
       await loadClasses();
     } catch (err) {
-      console.error(err);
+      console.error('Error deleting class:', err);
+      toast({ title: 'Failed to delete class', variant: 'destructive' });
     }
   }
 
-  function googleCalendarLink(c: any) {
-    const start = new Date(c.date_time);
-    const end = new Date(start.getTime() + (c.duration_minutes || 60)*60000);
-    const startISO = start.toISOString().replace(/-|:|\.\d{3}Z/g,'');
-    const endISO = end.toISOString().replace(/-|:|\.\d{3}Z/g,'');
-    const params = new URLSearchParams({ action: 'TEMPLATE', text: c.title, details: `Class: ${c.title}`, location: c.location || '', dates: `${startISO}/${endISO}` });
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
-  }
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  function downloadICS(c: any) {
-    const start = new Date(c.date_time);
-    const end = new Date(start.getTime() + (c.duration_minutes || 60)*60000);
-    const ics = makeICS({ title: c.title, location: c.location, start, end, description: `Class: ${c.title}` });
-    const blob = new Blob([ics], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${c.title.replace(/\s+/g,'_')}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12 px-4">
-      <div className="max-w-6xl mx-auto bg-card rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-4">Manage Classes & Timetable</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-secondary p-4 rounded">
-            <h3 className="font-semibold mb-2">Create Recurring Template</h3>
-            <input placeholder="Title" value={form.title} onChange={(e)=>setForm(f=>({...f,title:e.target.value}))} className="w-full mb-2 p-2 bg-input rounded" />
-            <input placeholder="Location" value={form.location} onChange={(e)=>setForm(f=>({...f,location:e.target.value}))} className="w-full mb-2 p-2 bg-input rounded" />
-            <div className="flex gap-2 mb-2">
-              <select value={String(form.weekday)} onChange={(e)=>setForm(f=>({...f,weekday:Number(e.target.value)}))} className="p-2 bg-input rounded">
-                <option value={0}>Sunday</option>
-                <option value={1}>Monday</option>
-                <option value={2}>Tuesday</option>
-                <option value={3}>Wednesday</option>
-                <option value={4}>Thursday</option>
-                <option value={5}>Friday</option>
-                <option value={6}>Saturday</option>
-              </select>
-              <input type="time" value={form.start_time} onChange={(e)=>setForm(f=>({...f,start_time:e.target.value}))} className="p-2 bg-input rounded" />
-              <input type="number" value={form.duration_minutes} onChange={(e)=>setForm(f=>({...f,duration_minutes:Number(e.target.value)}))} className="w-24 p-2 bg-input rounded" />
-            </div>
-            <div className="flex gap-2 items-center">
-              <input type="number" value={form.capacity} onChange={(e)=>setForm(f=>({...f,capacity:Number(e.target.value)}))} className="w-24 p-2 bg-input rounded" />
-              <label className="text-sm">Recurring</label>
-              <input type="checkbox" checked={form.is_recurring} onChange={(e)=>setForm(f=>({...f,is_recurring:e.target.checked}))} />
-              <button onClick={createTemplate} className="ml-auto px-3 py-2 bg-primary rounded text-black">Create</button>
-            </div>
-          </div>
-
-          <div className="bg-secondary p-4 rounded">
-            <h3 className="font-semibold mb-2">Upcoming Classes (generated)</h3>
-            <div className="space-y-2 max-h-72 overflow-auto">
-              {classes.map(c=> (
-                <div key={c.id} className="p-2 bg-card rounded flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">{c.title}</div>
-                    <div className="text-sm text-muted">{new Date(c.date_time).toLocaleString()} — {c.location}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <a target="_blank" rel="noreferrer" href={googleCalendarLink(c)} className="px-2 py-1 bg-blue-600 rounded text-sm">Google</a>
-                    <button onClick={()=>downloadICS(c)} className="px-2 py-1 bg-gray-700 rounded text-sm">.ics</button>
-                    <button onClick={()=>publishClass(c)} className="px-2 py-1 bg-yellow-600 rounded text-sm">{c.is_published? 'Unpublish':'Publish'}</button>
-                  </div>
-                </div>
-              ))}
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <Link to="/instructor">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="font-display text-xl text-foreground flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                MANAGE CLASSES
+              </h1>
+              <p className="text-sm text-muted-foreground">Create and manage your class schedule</p>
             </div>
           </div>
         </div>
+      </header>
 
-        <div className="mt-6">
-          <h3 className="font-semibold mb-2">Templates</h3>
-          <div className="space-y-2">
-            {templates.map(t => (
-              <div key={t.id} className="p-3 bg-card rounded flex justify-between items-center">
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Create Class Form */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h2 className="font-display text-lg mb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              CREATE NEW CLASS
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-muted-foreground">Title</label>
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  placeholder="e.g. Kids Karate"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Location</label>
+                <input
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  placeholder="e.g. Main Dojo"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="font-medium">{t.title}</div>
-                  <div className="text-sm text-muted">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][t.weekday]} @ {t.start_time} — {t.location}</div>
+                  <label className="text-sm text-muted-foreground">Program</label>
+                  <select
+                    value={form.program}
+                    onChange={(e) => setForm({ ...form, program: e.target.value })}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  >
+                    <option value="kids">Kids</option>
+                    <option value="teens">Teens</option>
+                    <option value="adults">Adults</option>
+                  </select>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={()=>deleteTemplate(t.id)} className="px-2 py-1 bg-red-700 rounded text-sm">Delete</button>
+                <div>
+                  <label className="text-sm text-muted-foreground">Day</label>
+                  <select
+                    value={form.day_of_week}
+                    onChange={(e) => setForm({ ...form, day_of_week: e.target.value })}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  >
+                    {days.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
                 </div>
               </div>
-            ))}
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">Start Time</label>
+                  <input
+                    type="time"
+                    value={form.start_time}
+                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">End Time</label>
+                  <input
+                    type="time"
+                    value={form.end_time}
+                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Capacity</label>
+                  <input
+                    type="number"
+                    value={form.capacity}
+                    onChange={(e) => setForm({ ...form, capacity: parseInt(e.target.value) })}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <Button variant="hero" onClick={createClass} className="w-full">
+                Create Class
+              </Button>
+            </div>
+          </div>
+
+          {/* Classes List */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h2 className="font-display text-lg mb-4">YOUR CLASSES</h2>
+
+            {classes.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No classes created yet. Create your first class!
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {classes.map((cls) => (
+                  <div
+                    key={cls.id}
+                    className={`p-4 bg-secondary rounded-lg border ${
+                      cls.is_active ? 'border-primary/30' : 'border-border opacity-60'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{cls.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {cls.day_of_week} • {cls.start_time} - {cls.end_time}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {cls.location} • {cls.program} • Capacity: {cls.capacity}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleActive(cls)}
+                        >
+                          {cls.is_active ? 'Deactivate' : 'Activate'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteClass(cls.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-      </div>
+      </main>
     </div>
   );
 }
