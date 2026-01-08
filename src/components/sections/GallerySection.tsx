@@ -1,22 +1,24 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { X } from "lucide-react";
-import heroImage from "@/assets/hero-karate.jpg";
-import instructorImage from "@/assets/instructor.png";
-
-const galleryItems = [
-  { id: "1", image_url: heroImage, alt: "Karate training session", span: "col-span-2 row-span-2" },
-  { id: "2", image_url: instructorImage, alt: "Sensei demonstration", span: "col-span-1 row-span-1" },
-  { id: "3", image_url: heroImage, alt: "Competition moment", span: "col-span-1 row-span-1" },
-  { id: "4", image_url: instructorImage, alt: "Belt ceremony", span: "col-span-1 row-span-2" },
-  { id: "5", image_url: heroImage, alt: "Kids class", span: "col-span-1 row-span-1" },
-  { id: "6", image_url: instructorImage, alt: "Team training", span: "col-span-1 row-span-1" },
-];
+import { getGalleryItems } from '@/lib/gallery';
 
 export const GallerySection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [galleryItems, setGalleryItems] = useState(() => getGalleryItems());
+
+  useEffect(() => {
+    // listen for storage changes from admin UI in another tab
+    function onStorage(e: StorageEvent) {
+      if (e.key === 'site.gallery.items') {
+        setGalleryItems(getGalleryItems());
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   return (
     <section id="gallery" className="section-padding bg-background" ref={ref}>
