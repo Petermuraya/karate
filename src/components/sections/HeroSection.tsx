@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, ChevronDown } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { motion } from "framer-motion";
-import OptimizedImage from "./OptimizedImage";
 import heroMainImage from "@/assets/hero-karate.jpg";
 import adultTraining from "@/assets/aldulttraining.png";
 import teenTraining from "@/assets/teentraining.png";
@@ -20,10 +19,9 @@ export const HeroSection = () => {
         animate={{ scale: 1.05 }}
         transition={{ duration: 15, ease: "linear" }}
       >
-        <OptimizedImage
+        <img
           src={heroMainImage}
           alt="Karate martial artist in powerful stance"
-          priority
           className="w-full h-full object-cover opacity-40"
         />
         {/* Enhanced gradient overlay */}
@@ -157,7 +155,7 @@ export const HeroSection = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
                 className="absolute inset-0 rounded-2xl overflow-hidden border-4 border-background/30 shadow-2xl"
               >
-                <OptimizedImage
+                <img
                   src={heroMainImage}
                   alt="Master demonstrating technique"
                   className="w-full h-full object-cover"
@@ -171,7 +169,7 @@ export const HeroSection = () => {
                 transition={{ duration: 0.6, delay: 0.9 }}
                 className="absolute -top-4 -right-4 w-48 h-36 rounded-xl overflow-hidden border-2 border-primary/20 shadow-xl z-10"
               >
-                <OptimizedImage
+                <img
                   src={adultTraining}
                   alt="Adult training session"
                   className="w-full h-full object-cover"
@@ -186,7 +184,7 @@ export const HeroSection = () => {
                 transition={{ duration: 0.6, delay: 1 }}
                 className="absolute -bottom-6 -left-6 w-56 h-40 rounded-xl overflow-hidden border-2 border-primary/20 shadow-xl z-10"
               >
-                <OptimizedImage
+                <img
                   src={teenTraining}
                   alt="Teen training session"
                   className="w-full h-full object-cover"
