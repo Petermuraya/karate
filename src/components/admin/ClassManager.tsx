@@ -300,16 +300,18 @@ export function ClassManager() {
                 </div>
                 <div className="divide-y divide-border">
                   {dayClasses.map((cls: any) => (
-                    <div key={cls.id} className={`p-4 flex items-center justify-between ${!cls.is_active ? 'opacity-50' : ''}`}>
+                    <div key={cls.id} className={`p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${!cls.is_active ? 'opacity-50' : ''}`}>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
                           <h4 className="font-medium text-foreground">{cls.title}</h4>
-                          <Badge variant="outline" className="capitalize">{cls.program}</Badge>
-                          {cls.level && cls.level !== 'all' && (
-                            <Badge variant="secondary" className="capitalize">{cls.level}</Badge>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="capitalize">{cls.program}</Badge>
+                            {cls.level && cls.level !== 'all' && (
+                              <Badge variant="secondary" className="capitalize">{cls.level}</Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {cls.start_time.slice(0, 5)} - {cls.end_time.slice(0, 5)}
@@ -324,8 +326,8 @@ export function ClassManager() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 mr-4">
+                      <div className="flex items-center gap-2 sm:ml-4 sm:pl-4">
+                        <div className="flex items-center gap-2 mr-0 sm:mr-4">
                           <Switch
                             checked={cls.is_active}
                             onCheckedChange={() => handleToggleActive(cls.id, cls.is_active)}
@@ -334,12 +336,14 @@ export function ClassManager() {
                             {cls.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(cls)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(cls.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(cls)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(cls.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
