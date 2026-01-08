@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsInstructor } from '@/hooks/useUserRole';
+import NotificationsDropdown from '@/components/NotificationsDropdown';
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const { isInstructor, isAdmin, isLoading: roleLoading } = useIsInstructor();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,7 +51,15 @@ export const Header = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-10">
-            {["Programs", "Instructor", "Philosophy", "Schedule", "Gallery", "Contact"].map((item) => (
+            {[
+              'Programs',
+              // show Instructor link only to instructors/admins
+              ...(isInstructor || roleLoading ? ['Instructor'] : []),
+              'Philosophy',
+              'Schedule',
+              'Gallery',
+              'Contact'
+            ].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}
@@ -62,8 +73,16 @@ export const Header = () => {
 
           {/* CTA / Auth */}
           <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:block">
+              <NotificationsDropdown />
+            </div>
             {user ? (
               <>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="secondary" size="sm">Admin</Button>
+                  </Link>
+                )}
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm" className="gap-2">
                     <User className="w-4 h-4" />
@@ -87,6 +106,27 @@ export const Header = () => {
                   </Button>
                 </Link>
               </>
+            )}
+          </div>
+
+          {/* Small-screen quick actions (inline) */}
+          <div className="flex md:hidden items-center gap-2">
+            <NotificationsDropdown />
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="icon" title="Admin"><User className="w-5 h-5" /></Button>
+                  </Link>
+                )}
+                <Link to="/dashboard">
+                  <Button variant="ghost" size="icon"><User className="w-5 h-5" /></Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="icon">Login</Button>
+              </Link>
             )}
           </div>
 
@@ -125,8 +165,16 @@ export const Header = () => {
                 </motion.a>
               ))}
               <div className="pt-4 border-t border-border flex flex-col gap-3">
+                <div className="flex items-center justify-end">
+                  <NotificationsDropdown />
+                </div>
                 {user ? (
                   <>
+                    {isAdmin && (
+                      <Link to="/admin" onClick={() => setIsOpen(false)}>
+                        <Button variant="outline" className="w-full">Admin</Button>
+                      </Link>
+                    )}
                     <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full gap-2">
                         <User className="w-4 h-4" />
