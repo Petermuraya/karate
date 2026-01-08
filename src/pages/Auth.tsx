@@ -26,6 +26,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [registrationType, setRegistrationType] = useState<'adult' | 'child' | 'trial'>('adult');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -95,7 +96,7 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, registrationType);
         if (error) {
           if (error.message.includes('already registered')) {
             toast({
@@ -224,6 +225,24 @@ export default function Auth() {
                 {errors.fullName && (
                   <p className="text-sm text-destructive">{errors.fullName}</p>
                 )}
+              </div>
+            )}
+
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="registrationType" className="text-foreground">Registration Type</Label>
+                <div className="relative">
+                  <select
+                    id="registrationType"
+                    value={registrationType}
+                    onChange={(e) => setRegistrationType(e.target.value as 'adult' | 'child' | 'trial')}
+                    className="w-full pl-3 pr-3 py-2 bg-secondary border-border rounded-md"
+                  >
+                    <option value="adult">Adult</option>
+                    <option value="child">Child (Parent-managed)</option>
+                    <option value="trial">Trial</option>
+                  </select>
+                </div>
               </div>
             )}
 
