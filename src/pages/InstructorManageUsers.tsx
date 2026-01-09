@@ -26,6 +26,12 @@ export default function InstructorManageUsers(): JSX.Element {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ProfileWithRole | null>(null);
+  const [notifUser, setNotifUser] = useState<ProfileWithRole | null>(null);
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('info');
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
   const belts = ['white', 'yellow', 'orange', 'green', 'blue', 'purple', 'brown', 'black'];
 
@@ -86,6 +92,29 @@ export default function InstructorManageUsers(): JSX.Element {
 
       if (error) throw error;
       toast({ title: 'Belt rank updated!' });
+      // Audit the change in belt_changes
+      try {
+        const oldBelt = profiles.find(p => p.id === profileId)?.belt_rank || null;
+        await supabase.from('belt_changes').insert({
+          user_id: userId,
+          changed_by: user?.id,
+          old_belt: oldBelt,
+          new_belt: beltRank
+        });
+      } catch (e) {
+        // non-fatal: log and continue
+        // eslint-disable-next-line no-console
+        console.warn('Failed to write belt change audit', e);
+      }
+
+      // Also ensure students.belt_level stays in sync for reporting and attendance
+      try {
+        await supabase.from('students').upsert({ user_id: userId, belt_level: beltRank });
+      } catch (e) {
+        // non-fatal: continue even if students upsert fails
+        // eslint-disable-next-line no-console
+        console.warn('Failed to sync students.belt_level', e);
+      }
       await loadUsers();
       setEditing(null);
     } catch (err) {
@@ -195,13 +224,27 @@ export default function InstructorManageUsers(): JSX.Element {
                       </td>
                       <td className="p-4 capitalize">{p.program || '-'}</td>
                       <td className="p-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditing(p)}
-                        >
-                          Edit
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setNotifUser(p)}
+                              disabled={notifLoading && notifUser?.user_id === p.user_id}
+                            >
+                              {notifLoading && notifUser?.user_id === p.user_id ? (
+                                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                'Notify'
+                              )}
+                            </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditing(p)}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -247,21 +290,118 @@ export default function InstructorManageUsers(): JSX.Element {
               <div className="flex gap-3 mt-6">
                 <Button
                   variant="hero"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!editing) return;
                     const beltSelect = document.getElementById('belt-select') as HTMLSelectElement;
                     const programSelect = document.getElementById('program-select') as HTMLSelectElement;
                     if (beltSelect && programSelect) {
-                      updateBeltRank(editing.id, editing.user_id, beltSelect.value);
-                      updateProgram(editing.id, programSelect.value);
+                      setSavingUserId(editing.user_id);
+                      try {
+                        await updateBeltRank(editing.id, editing.user_id, beltSelect.value);
+                        await updateProgram(editing.id, programSelect.value);
+                      } finally {
+                        setSavingUserId(null);
+                      }
                     }
                   }}
                   className="flex-1"
+                  disabled={savingUserId === editing?.user_id}
                 >
-                  Save Changes
+                  {savingUserId === editing?.user_id ? (
+                    <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : (
+                    'Save Changes'
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setEditing(null)}
+                  disabled={savingUserId === editing?.user_id}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notification Modal */}
+        {notifUser && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md">
+              <h2 className="font-display text-lg mb-2">Send Notification</h2>
+              <p className="text-muted-foreground mb-4">To: {notifUser.full_name} ({notifUser.email})</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">Title</label>
+                  <input
+                    value={notifTitle}
+                    onChange={(e) => setNotifTitle(e.target.value)}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                    placeholder="Short title"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-muted-foreground">Message</label>
+                  <textarea
+                    value={notifMessage}
+                    onChange={(e) => setNotifMessage(e.target.value)}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg h-28"
+                    placeholder="Write your message to the student"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-muted-foreground">Type</label>
+                  <select
+                    value={notifType}
+                    onChange={(e) => setNotifType(e.target.value)}
+                    className="w-full mt-1 p-3 bg-secondary border border-border rounded-lg"
+                  >
+                    <option value="info">Info</option>
+                    <option value="reminder">Reminder</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="hero"
+                  onClick={async () => {
+                    if (!notifUser) return;
+                    setNotifLoading(true);
+                    try {
+                      const { error } = await supabase.from('notifications').insert({
+                        user_id: notifUser.user_id,
+                        title: notifTitle || 'Message from instructor',
+                        message: notifMessage || '',
+                        type: notifType
+                      });
+                      if (error) throw error;
+                      toast({ title: 'Notification sent' });
+                      setNotifUser(null);
+                      setNotifTitle('');
+                      setNotifMessage('');
+                      setNotifType('info');
+                    } catch (err) {
+                      console.error('Failed to send notification', err);
+                      toast({ title: 'Failed to send notification', variant: 'destructive' });
+                    } finally {
+                      setNotifLoading(false);
+                    }
+                  }}
+                  className="flex-1"
+                  disabled={notifLoading}
+                >
+                  Send
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setNotifUser(null)}
+                  disabled={notifLoading}
                 >
                   Cancel
                 </Button>
