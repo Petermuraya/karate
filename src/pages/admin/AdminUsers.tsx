@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import { useAllStudents } from '@/hooks/useAdminData';
+import { useAllStudents, useUpdateUserRole } from '@/hooks/useAdminData';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
 export default function AdminUsers() {
   const navigate = useNavigate();
   const { data: users, isLoading } = useAllStudents();
+  const updateRole = useUpdateUserRole();
+  const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>({});
+  const [optimisticRoles, setOptimisticRoles] = useState<Record<string, string>>({});
+
+  const handleRoleChange = async (u: any, role: string) => {
+    const user_id = u.user_id || u.id;
+    setOptimisticRoles(prev => ({ ...prev, [user_id]: role }));
+    setUpdatingRoles(prev => ({ ...prev, [user_id]: true }));
+    try {
+      await updateRole.mutateAsync({ user_id, role });
+    } catch (err) {
+      console.error('Failed to update role', err);
+      // revert optimistic
+      setOptimisticRoles(prev => {
+        const copy = { ...prev };
+        delete copy[user_id];
+        return copy;
+      });
+    } finally {
+      setUpdatingRoles(prev => ({ ...prev, [user_id]: false }));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
@@ -52,7 +74,23 @@ export default function AdminUsers() {
                 <TableRow key={u.id}>
                   <TableCell>{u.full_name}</TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.role || 'student'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="rounded-md border px-2 py-1 text-sm"
+                        value={optimisticRoles[u.user_id || u.id] || u.role || 'student'}
+                        onChange={(e) => handleRoleChange(u, e.target.value)}
+                        disabled={!!updatingRoles[u.user_id || u.id]}
+                      >
+                      <option value="student">student</option>
+                      <option value="instructor">instructor</option>
+                      <option value="admin">admin</option>
+                      </select>
+                      {updatingRoles[u.user_id || u.id] && (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{new Date(u.inserted_at || u.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost">View</Button>
@@ -71,7 +109,26 @@ export default function AdminUsers() {
                 <div>
                   <div className="text-sm font-medium text-foreground">{u.full_name}</div>
                   <div className="text-xs text-muted-foreground">{u.email}</div>
-                  <div className="mt-2 text-xs text-muted-foreground">Role: <span className="font-medium text-foreground">{u.role || 'student'}</span></div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Role: <span className="font-medium text-foreground">{u.role || 'student'}</span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="rounded-md border px-2 py-1 text-sm mt-2"
+                        value={optimisticRoles[u.user_id || u.id] || u.role || 'student'}
+                        onChange={(e) => handleRoleChange(u, e.target.value)}
+                        disabled={!!updatingRoles[u.user_id || u.id]}
+                      >
+                      <option value="student">student</option>
+                      <option value="instructor">instructor</option>
+                      <option value="admin">admin</option>
+                      </select>
+                      {updatingRoles[u.user_id || u.id] && (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex-shrink-0">
                   <Button size="sm" variant="ghost">View</Button>
