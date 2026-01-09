@@ -12,6 +12,7 @@ import InstructorPanel from "./pages/InstructorPanel";
 import InstructorVideoUpload from "./pages/InstructorVideoUpload";
 import InstructorManageUsers from "./pages/InstructorManageUsers";
 import InstructorManageClasses from "./pages/InstructorManageClasses";
+import InstructorManageVideos from "./pages/InstructorManageVideos";
 import InstructorProfileEdit from "./pages/InstructorProfileEdit";
 import StudentOnboarding from "./pages/StudentOnboarding";
 import NotFound from "./pages/NotFound";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/instructor" element={<InstructorPanel />} />
             <Route path="/instructor/upload" element={<InstructorVideoUpload />} />
             <Route path="/instructor/users" element={<InstructorManageUsers />} />
+            <Route path="/instructor/videos" element={<InstructorManageVideos />} />
             <Route path="/instructor/classes" element={<InstructorManageClasses />} />
             <Route path="/instructor/profile" element={<InstructorProfileEdit />} />
             <Route path="/onboarding" element={<StudentOnboarding />} />
