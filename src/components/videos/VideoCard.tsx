@@ -3,6 +3,7 @@ import { Play, Clock, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Video, getBeltRankInfo, formatDuration } from "@/hooks/useVideos";
+import ShareMenu from '@/components/share/ShareMenu';
 import { useAuth } from "@/hooks/useAuth";
 
 interface VideoCardProps {
@@ -53,7 +54,8 @@ const VideoCard = ({ video, userBeltRank, onClick }: VideoCardProps) => {
                 <Lock className="w-8 h-8 text-muted-foreground" />
               </div>
             )}
-          </div>
+            {/* Duration badge */}
+            </div>
 
           {/* Duration badge */}
           {video.duration_seconds && (
@@ -100,6 +102,9 @@ const VideoCard = ({ video, userBeltRank, onClick }: VideoCardProps) => {
                 {video.instructor_name}
               </span>
             )}
+            <div className="ml-3">
+              <ShareMenu title={video.title} description={video.description ?? undefined} url={video.video_url} videoId={video.id} />
+            </div>
           </div>
         </CardContent>
       </Card>
