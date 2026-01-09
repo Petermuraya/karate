@@ -47,33 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      students: {
-        Row: {
-          id: string
-          user_id: string
-          belt_level: string | null
-          program: string | null
-          location: string | null
-          enrollment_date: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          belt_level?: string | null
-          program?: string | null
-          location?: string | null
-          enrollment_date?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          belt_level?: string | null
-          program?: string | null
-          location?: string | null
-          enrollment_date?: string | null
-        }
-        Relationships: []
-      }
       attendance: {
         Row: {
           attended_at: string

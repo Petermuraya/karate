@@ -7,6 +7,7 @@ import { ChevronLeft } from 'lucide-react';
 export default function AdminNotifications() {
   const navigate = useNavigate();
   const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const notificationsList = notifications || [];
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -32,12 +33,12 @@ export default function AdminNotifications() {
         </div>
 
         <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-          {(notifications || []).map((n: any) => (
+          {notificationsList.map((n) => (
             <div key={n.id} className={`p-3 rounded ${n.is_read ? 'opacity-60' : 'bg-secondary/40'}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">{n.title}</div>
-                  {n.body && <div className="text-sm text-muted-foreground">{n.body}</div>}
+                  {n.message && <div className="text-sm text-muted-foreground">{n.message}</div>}
                 </div>
                 <div className="flex items-center gap-2">
                   {!n.is_read && <Button size="sm" onClick={() => markAsRead && markAsRead(n.id)}>Mark read</Button>}
@@ -46,7 +47,7 @@ export default function AdminNotifications() {
             </div>
           ))}
 
-          {(notifications || []).length === 0 && (
+          {notificationsList.length === 0 && (
             <div className="text-center text-muted-foreground py-8">No notifications</div>
           )}
         </div>

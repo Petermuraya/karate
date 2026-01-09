@@ -24,12 +24,12 @@ export default function NotificationsDropdown() {
   const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
 
-  const unreadCount = (notifications || []).filter((n) => !n.is_read).length;
+  const notificationsList = notifications || [];
+  const unreadCount = notificationsList.filter((n) => !n.is_read).length;
 
   const handleClick = async (n: any) => {
     try {
       await markAsRead(n.id);
-      if (n.link) navigate(n.link);
     } catch (e) {
       console.error('Failed to mark read', e);
     }
@@ -62,7 +62,7 @@ export default function NotificationsDropdown() {
               <div className="h-4 bg-secondary rounded w-1/2 animate-pulse" />
               <div className="h-10 bg-secondary rounded animate-pulse" />
             </div>
-          ) : (notifications || []).slice(0, 10).map((n) => (
+          ) : notificationsList.slice(0, 10).map((n) => (
             <button
               key={n.id}
               onClick={() => handleClick(n)}
@@ -73,13 +73,13 @@ export default function NotificationsDropdown() {
                   <div className="font-medium text-sm">{n.title}</div>
                   <div className="text-xs text-muted-foreground">{timeAgo(n.created_at)}</div>
                 </div>
-                {n.body && <div className="text-sm text-muted-foreground mt-1">{n.body}</div>}
+                {n.message && <div className="text-sm text-muted-foreground mt-1">{n.message}</div>}
               </div>
               {!n.is_read && <Badge variant="secondary" className="shrink-0">New</Badge>}
             </button>
           ))}
 
-          {(!isLoading && (notifications || []).length === 0) && (
+          {(!isLoading && notificationsList.length === 0) && (
             <div className="text-center text-sm text-muted-foreground py-6">No notifications</div>
           )}
         </div>

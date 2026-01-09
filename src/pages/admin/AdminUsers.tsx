@@ -12,7 +12,7 @@ export default function AdminUsers() {
   const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>({});
   const [optimisticRoles, setOptimisticRoles] = useState<Record<string, string>>({});
 
-  const handleRoleChange = async (u: any, role: string) => {
+  const handleRoleChange = async (u: any, role: 'admin' | 'instructor' | 'student') => {
     const user_id = u.user_id || u.id;
     setOptimisticRoles(prev => ({ ...prev, [user_id]: role }));
     setUpdatingRoles(prev => ({ ...prev, [user_id]: true }));
