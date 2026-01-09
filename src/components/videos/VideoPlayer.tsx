@@ -3,6 +3,7 @@ import { X, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Video, getBeltRankInfo, formatDuration } from "@/hooks/useVideos";
+import ShareMenu from '@/components/share/ShareMenu';
 
 interface VideoPlayerProps {
   video: Video | null;
@@ -57,7 +58,12 @@ const VideoPlayer = ({ video, isOpen, onClose }: VideoPlayerProps) => {
             {/* Video info */}
             <div className="p-6">
               <div className="flex items-start justify-between gap-4 mb-4">
-                <h2 className="text-2xl font-bold text-foreground">{video.title}</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-2xl font-bold text-foreground">{video.title}</h2>
+                  <div className="hidden sm:block">
+                    <ShareMenu title={video.title} description={video.description ?? undefined} url={video.video_url} videoId={video.id} />
+                  </div>
+                </div>
                 <Badge className={`${beltInfo.color} border-0 shrink-0`}>
                   {beltInfo.label}
                 </Badge>
