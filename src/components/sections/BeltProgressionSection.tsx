@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
+import ShareMenu from '@/components/share/ShareMenu';
 
 const belts = [
   { name: "White Belt", level: "Beginner", japanese: "白帯", color: "bg-gray-100 text-gray-900", description: "The beginning of the journey. Learn basic stances, blocks, and strikes." },
@@ -31,6 +32,10 @@ export const BeltProgressionSection = () => {
             THE PATH TO <span className="text-primary">MASTERY</span>
           </h2>
           <p className="mt-4 text-sm text-gray-400">Belts are awarded based on curriculum milestones and instructor evaluations. Belt assignment will be confirmed by your instructor.</p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <ShareMenu title="Karate Belt Progression" description="Follow the path to mastery and share your journey." url={typeof window !== 'undefined' ? `${window.location.origin}/#belt-progression` : undefined} />
+            <button className="px-3 py-2 bg-primary text-primary-foreground rounded">View full progression</button>
+          </div>
         </motion.div>
 
         <div className="flex flex-col gap-2">
