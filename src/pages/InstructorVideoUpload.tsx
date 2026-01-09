@@ -1,10 +1,14 @@
 import React, { useRef, useState, FormEvent } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const PROGRAM_OPTIONS = [
-  'All Programs',
-  'Competition Training',
-  'Kids & Teens',
-  'Adults Only',
+  'all',
+  'competition',
+  'kids',
+  'adults',
 ];
 
 function readableFileSize(bytes: number) {
@@ -18,15 +22,25 @@ function readableFileSize(bytes: number) {
   return `${v.toFixed(1)} ${units[i]}`;
 }
 
+function extractYouTubeId(url: string) {
+  const m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+
 export default function InstructorVideoUpload(): JSX.Element {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [mode, setMode] = useState<'upload' | 'youtube'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [program, setProgram] = useState(PROGRAM_OPTIONS[0]);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<number>(0);
   const [uploading, setUploading] = useState(false);
   const MAX_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 
@@ -46,32 +60,11 @@ export default function InstructorVideoUpload(): JSX.Element {
     setPreviewURL(URL.createObjectURL(f));
   }
 
-  async function simulateUpload(fileToUpload: File) {
-    setUploading(true);
-    setProgress(0);
-    // Simulate upload progress
-    await new Promise<void>((resolve) => {
-      let p = 0;
-      const id = setInterval(() => {
-        p += Math.random() * 15 + 5; // random step
-        if (p >= 100) {
-          p = 100;
-          setProgress(100);
-          clearInterval(id);
-          setTimeout(() => resolve(), 400);
-        } else {
-          setProgress(Math.floor(p));
-        }
-      }, 300);
-    });
-    setUploading(false);
-  }
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!file) {
-      setError('Please select a video file to upload.');
+    if (!user) {
+      setError('You must be signed in to upload.');
       return;
     }
     if (!title.trim()) {
@@ -79,119 +72,182 @@ export default function InstructorVideoUpload(): JSX.Element {
       return;
     }
 
-    // In a real app, create FormData and POST to an API endpoint.
-    const payload = {
-      title,
-      description,
-      program,
-      filename: file.name,
-      size: file.size,
-      type: file.type,
-    };
-    // eslint-disable-next-line no-console
-    console.log('Preparing upload payload', payload);
+    setUploading(true);
 
     try {
-      await simulateUpload(file);
-      // eslint-disable-next-line no-console
-      console.log('Upload complete (simulated) —', payload);
-      setError(null);
+      let videoUrl = '';
+      let thumbnailUrl: string | null = null;
+
+      if (mode === 'youtube') {
+        const id = extractYouTubeId(youtubeUrl.trim());
+        if (!id) {
+          setError('Invalid YouTube URL');
+          setUploading(false);
+          return;
+        }
+        // store embed url for iframe
+        videoUrl = `https://www.youtube.com/embed/${id}`;
+        thumbnailUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      } else {
+        if (!file) {
+          setError('Please select a video file to upload.');
+          setUploading(false);
+          return;
+        }
+
+        const path = `videos/${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
+        const { error: uploadError } = await supabase.storage.from('videos').upload(path, file, { upsert: false });
+        if (uploadError) {
+          console.error('Upload error', uploadError);
+          toast({ title: 'Upload failed', description: uploadError.message || 'Check storage bucket and permissions', variant: 'destructive' });
+          setUploading(false);
+          return;
+        }
+
+        const { data } = supabase.storage.from('videos').getPublicUrl(path);
+        videoUrl = data.publicUrl;
+      }
+
+      // Insert into videos table
+      const insertObj: any = {
+        title: title.trim(),
+        description: description.trim() || null,
+        category: program,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl,
+        is_public: false,
+        minimum_belt_rank: 'white',
+        instructor_name: profile?.full_name || user.email || null,
+      };
+
+      const { data: inserted, error: insertErr } = await supabase.from('videos').insert(insertObj).select().maybeSingle();
+      if (insertErr) {
+        console.error('Insert error', insertErr);
+        toast({ title: 'Failed to save video', description: insertErr.message || undefined, variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
+
+      toast({ title: 'Video added', description: 'Your video is saved to the library' });
+
+      // cleanup
       setTitle('');
       setDescription('');
-      setProgram(PROGRAM_OPTIONS[0]);
       setFile(null);
-      if (previewURL) {
-        URL.revokeObjectURL(previewURL);
-        setPreviewURL(null);
-      }
-      alert('Video uploaded (simulated).');
+      setPreviewURL((p) => { if (p) URL.revokeObjectURL(p); return null; });
+      setYoutubeUrl('');
+
+      // redirect to instructor videos list
+      navigate('/instructor/videos');
     } catch (err) {
-      setError('Upload failed. Try again.');
+      console.error('Upload flow error', err);
+      toast({ title: 'Upload failed', variant: 'destructive' });
+    } finally {
       setUploading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-black text-white py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-gray-900 rounded-lg shadow-md p-8">
+    <div className="min-h-screen bg-background text-foreground py-8 px-4">
+      <div className="max-w-4xl mx-auto bg-card border border-border rounded-lg shadow p-8">
         <h1 className="text-2xl font-bold mb-4">Instructor — Add Training Video</h1>
-        <p className="text-sm text-gray-400 mb-6">Upload a new training video for the library. Accepted: video/*, max 500MB.</p>
+
+        <div className="mb-6 flex gap-2">
+          <button
+            onClick={() => setMode('upload')}
+            className={`px-3 py-2 rounded ${mode === 'upload' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+            Upload File
+          </button>
+          <button
+            onClick={() => setMode('youtube')}
+            className={`px-3 py-2 rounded ${mode === 'youtube' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+            YouTube Link
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm text-gray-300 mb-2">Title</label>
+            <label className="block text-sm text-muted-foreground mb-2">Title</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="E.g. Advanced Kicks — Session 3"
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+              className="w-full bg-input border border-border rounded px-3 py-2"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-2">Description</label>
+            <label className="block text-sm text-muted-foreground mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="Short summary of the video"
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+              className="w-full bg-input border border-border rounded px-3 py-2"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-2">Program</label>
+            <label className="block text-sm text-muted-foreground mb-2">Program</label>
             <select
               value={program}
               onChange={(e) => setProgram(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+              className="w-full bg-input border border-border rounded px-3 py-2"
             >
               {PROGRAM_OPTIONS.map((opt) => (
-                <option key={opt} value={opt} className="text-black">
+                <option key={opt} value={opt}>
                   {opt}
                 </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-300 mb-2">Video File</label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
-              >
-                Choose File
-              </button>
-              <input ref={fileRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" />
-              <div className="text-sm text-gray-400">
-                {file ? `${file.name} • ${readableFileSize(file.size)}` : 'No file selected'}
-              </div>
-            </div>
-            {error && <div className="mt-2 text-sm text-red-400">{error}</div>}
-          </div>
-
-          {previewURL && (
+          {mode === 'upload' && (
             <div>
-              <label className="block text-sm text-gray-300 mb-2">Preview</label>
-              <video src={previewURL} controls className="w-full rounded bg-black" />
+              <label className="block text-sm text-muted-foreground mb-2">Video File</label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded"
+                >
+                  Choose File
+                </button>
+                <input ref={fileRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" />
+                <div className="text-sm text-muted-foreground">
+                  {file ? `${file.name} • ${readableFileSize(file.size)}` : 'No file selected'}
+                </div>
+              </div>
+              {previewURL && (
+                <div className="mt-4">
+                  <label className="block text-sm text-muted-foreground mb-2">Preview</label>
+                  <video src={previewURL} controls className="w-full rounded bg-black" />
+                </div>
+              )}
             </div>
           )}
 
-          {uploading && (
-            <div className="w-full bg-gray-800 rounded overflow-hidden">
-              <div className="h-2 bg-yellow-600" style={{ width: `${progress}%` }} />
+          {mode === 'youtube' && (
+            <div>
+              <label className="block text-sm text-muted-foreground mb-2">YouTube URL</label>
+              <input
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full bg-input border border-border rounded px-3 py-2"
+              />
             </div>
           )}
+
+          {error && <div className="text-sm text-destructive">{error}</div>}
 
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={uploading}
-              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-black font-semibold rounded"
+              className="px-6 py-2 bg-primary text-primary-foreground font-semibold rounded"
             >
-              {uploading ? `Uploading ${progress}%` : 'Upload Video'}
+              {uploading ? 'Saving…' : 'Save Video'}
             </button>
             <button
               type="button"
@@ -202,8 +258,9 @@ export default function InstructorVideoUpload(): JSX.Element {
                   setPreviewURL(null);
                 }
                 setError(null);
+                setYoutubeUrl('');
               }}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-gray-200"
+              className="px-4 py-2 bg-muted rounded"
             >
               Clear
             </button>
