@@ -118,11 +118,11 @@ export function AttendanceTracker() {
                   <SelectContent>
                     {(students || []).map((student: any) => (
                       <SelectItem key={student.user_id} value={student.user_id}>
-                        {student.full_name} 
-                        <span className="text-muted-foreground ml-2">
-                          ({student.belt_rank} belt)
-                        </span>
-                      </SelectItem>
+                          {student.full_name} 
+                          <span className="text-muted-foreground ml-2">
+                            ({student.belt_level || student.belt_rank || 'white'} belt)
+                          </span>
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -207,7 +207,7 @@ export function AttendanceTracker() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="capitalize">
-                          {student?.belt_rank || 'white'} belt
+                          {student?.belt_level || student?.belt_rank || 'white'} belt
                         </Badge>
                         <Badge variant="outline" className="capitalize">
                           {record.classes?.program}
