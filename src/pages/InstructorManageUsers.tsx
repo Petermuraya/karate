@@ -92,29 +92,6 @@ export default function InstructorManageUsers(): JSX.Element {
 
       if (error) throw error;
       toast({ title: 'Belt rank updated!' });
-      // Audit the change in belt_changes
-      try {
-        const oldBelt = profiles.find(p => p.id === profileId)?.belt_rank || null;
-        await supabase.from('belt_changes').insert({
-          user_id: userId,
-          changed_by: user?.id,
-          old_belt: oldBelt,
-          new_belt: beltRank
-        });
-      } catch (e) {
-        // non-fatal: log and continue
-        // eslint-disable-next-line no-console
-        console.warn('Failed to write belt change audit', e);
-      }
-
-      // Also ensure students.belt_level stays in sync for reporting and attendance
-      try {
-        await supabase.from('students').upsert({ user_id: userId, belt_level: beltRank });
-      } catch (e) {
-        // non-fatal: continue even if students upsert fails
-        // eslint-disable-next-line no-console
-        console.warn('Failed to sync students.belt_level', e);
-      }
       await loadUsers();
       setEditing(null);
     } catch (err) {
@@ -289,7 +266,6 @@ export default function InstructorManageUsers(): JSX.Element {
 
               <div className="flex gap-3 mt-6">
                 <Button
-                  variant="hero"
                   onClick={async () => {
                     if (!editing) return;
                     const beltSelect = document.getElementById('belt-select') as HTMLSelectElement;
@@ -369,7 +345,6 @@ export default function InstructorManageUsers(): JSX.Element {
 
               <div className="flex gap-3 mt-6">
                 <Button
-                  variant="hero"
                   onClick={async () => {
                     if (!notifUser) return;
                     setNotifLoading(true);

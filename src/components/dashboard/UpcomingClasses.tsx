@@ -132,7 +132,7 @@ export function UpcomingClasses() {
                         const ends = new Date(starts.getTime() + ((parseTime(cls.end_time) - parseTime(cls.start_time)) || 60) * 60000);
                         const ev = {
                           title: cls.title,
-                          description: cls.description || cls.body || '',
+                          description: cls.description || '',
                           location: cls.location || '',
                           startsAt: starts,
                           endsAt: ends,
@@ -155,7 +155,7 @@ export function UpcomingClasses() {
                         const ends = new Date(starts.getTime() + ((parseTime(cls.end_time) - parseTime(cls.start_time)) || 60) * 60000);
                         const ev = {
                           title: cls.title,
-                          description: cls.description || cls.body || '',
+                          description: cls.description || '',
                           location: cls.location || '',
                           startsAt: starts,
                           endsAt: ends,

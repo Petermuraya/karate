@@ -90,8 +90,7 @@ export default function InstructorPanel() {
           animate={{ opacity: 1, y: 0 }}
         >
           <Tabs defaultValue="classes" className="space-y-6">
-            <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-              <TabsList className="grid grid-cols-4 w-full max-w-2xl px-2 md:px-0">
+            <TabsList className="grid grid-cols-4 w-full max-w-2xl">
               <TabsTrigger value="classes" className="gap-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">Classes</span>

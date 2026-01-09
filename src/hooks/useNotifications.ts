@@ -6,11 +6,10 @@ import { useAuth } from '@/hooks/useAuth';
 export interface Notification {
   id: string;
   user_id: string;
-  type: string;
+  type: string | null;
   title: string;
-  body?: string | null;
-  link?: string | null;
-  is_read?: boolean;
+  message: string;
+  is_read?: boolean | null;
   created_at?: string | null;
 }
 
@@ -35,12 +34,11 @@ export default function useNotifications(type?: string) {
 
       const { data, error } = await q;
       if (error) throw error;
-      return (data || []) as Notification[];
+      const result = (data || []) as Notification[];
+      setNotifications(result);
+      return result;
     },
     enabled: !!userId,
-    onSuccess(list) {
-      setNotifications(list || []);
-    }
   });
 
   useEffect(() => {
@@ -135,4 +133,3 @@ export default function useNotifications(type?: string) {
     markAllAsRead,
   };
 }
-

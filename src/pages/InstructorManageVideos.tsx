@@ -21,7 +21,7 @@ const InstructorManageVideos = () => {
       return data as Video;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['videos']);
+      queryClient.invalidateQueries({ queryKey: ['videos'] });
       setEditing(null);
     },
   });
@@ -43,7 +43,6 @@ const InstructorManageVideos = () => {
           }
         } catch (e) {
           // ignore storage removal errors but log
-          // eslint-disable-next-line no-console
           console.warn('Failed to remove storage object', e);
         }
       }
@@ -52,7 +51,7 @@ const InstructorManageVideos = () => {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => queryClient.invalidateQueries(['videos']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['videos'] }),
   });
 
   const startEdit = (v: Video) => {
@@ -128,7 +127,7 @@ const InstructorManageVideos = () => {
             <input
               className="w-full mb-3 p-2 border rounded"
               value={form.category ?? ''}
-              onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+              onChange={(e) => setForm((s) => ({ ...s, category: e.target.value as Video['category'] }))}
             />
             <label className="block text-sm">Minimum Belt Rank</label>
             <input
@@ -149,8 +148,8 @@ const InstructorManageVideos = () => {
               <button type="button" onClick={() => setEditing(null)} className="px-3 py-1 border rounded">
                 Cancel
               </button>
-              <button type="submit" disabled={updateMutation.isLoading} className="px-3 py-1 bg-green-600 rounded text-white">
-                {updateMutation.isLoading ? 'Saving…' : 'Save'}
+              <button type="submit" disabled={updateMutation.isPending} className="px-3 py-1 bg-green-600 rounded text-white">
+                {updateMutation.isPending ? 'Saving…' : 'Save'}
               </button>
             </div>
           </form>

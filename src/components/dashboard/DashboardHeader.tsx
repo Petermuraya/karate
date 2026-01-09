@@ -10,7 +10,8 @@ import { formatDistanceToNow } from 'date-fns';
 export function DashboardHeader() {
   const { profile, signOut } = useAuth();
   const { notifications, markAsRead } = useNotifications();
-  const unreadCount = (notifications || []).filter((n: any) => !n.is_read).length;
+  const notificationsList = notifications || [];
+  const unreadCount = notificationsList.filter((n) => !n.is_read).length;
   const navigate = useNavigate();
   
   const [showNotifications, setShowNotifications] = useState(false);
@@ -89,10 +90,10 @@ export function DashboardHeader() {
                       <h3 className="font-semibold text-foreground">Notifications</h3>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
-                      {notifications?.length === 0 ? (
+                      {notificationsList.length === 0 ? (
                         <p className="p-4 text-center text-muted-foreground">No notifications</p>
                       ) : (
-                        notifications?.slice(0, 5).map(notification => (
+                        notificationsList.slice(0, 5).map(notification => (
                           <button
                             key={notification.id}
                             onClick={() => handleNotificationClick(notification.id)}
@@ -101,9 +102,9 @@ export function DashboardHeader() {
                             }`}
                           >
                             <p className="font-medium text-foreground text-sm">{notification.title}</p>
-                            <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{notification.message ?? notification.body}</p>
+                            <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{notification.message}</p>
                             <p className="text-muted-foreground text-xs mt-2">
-                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                              {notification.created_at && formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                             </p>
                           </button>
                         ))

@@ -235,49 +235,28 @@ export function useRecordAttendance() {
   });
 }
 
-// Students List
+// Students List - uses profiles table only (no students table exists)
 export function useAllStudents() {
   return useQuery({
     queryKey: ['all-students'],
     queryFn: async () => {
-      // Fetch profiles and students and merge so that students.belt_level takes precedence
-      const [{ data: profiles, error: pErr }, { data: students, error: sErr }] = await Promise.all([
-        supabase.from('profiles').select('*').order('full_name'),
-        supabase.from('students').select('*')
-      ]);
+      const { data: profiles, error: pErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('full_name');
 
       if (pErr) throw pErr;
-      if (sErr) {
-        // if students table missing or permission issues, still return profiles
-        return profiles;
-      }
-
-      const studentsMap = (students || []).reduce((acc: Record<string, any>, s: any) => {
-        acc[s.user_id] = s;
-        return acc;
-      }, {} as Record<string, any>);
-
-      const merged = (profiles || []).map((p: any) => {
-        const s = studentsMap[p.user_id];
-        return {
-          ...p,
-          belt_level: s?.belt_level || null,
-          // prefer students.belt_level for belt displays (fallback to profile.belt_rank)
-          belt_rank: s?.belt_level || p.belt_rank || null
-        };
-      });
-
-      return merged;
+      return profiles || [];
     }
   });
 }
 
-// Update user role (admin -> change profile.role)
+// Update user role (admin -> change user_roles table)
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ user_id, role }: { user_id: string; role: string }) => {
+    mutationFn: async ({ user_id, role }: { user_id: string; role: 'admin' | 'instructor' | 'student' }) => {
       // Remove existing roles for the user then insert the selected role.
       const { error: delErr } = await supabase
         .from('user_roles')
@@ -327,19 +306,13 @@ export function useAnalytics() {
         .select('*', { count: 'exact', head: true })
         .gte('attended_at', startOfMonth.toISOString().split('T')[0]);
       
-      // Get belt distribution preferring students.belt_level when present
-      const [{ data: profilesBelt }, { data: students }] = await Promise.all([
-        supabase.from('profiles').select('id, user_id, belt_rank'),
-        supabase.from('students').select('user_id, belt_level')
-      ]);
-
-      const studentsMap = (students || []).reduce((acc: Record<string, any>, s: any) => {
-        acc[s.user_id] = s;
-        return acc;
-      }, {} as Record<string, any>);
+      // Get belt distribution from profiles
+      const { data: profilesBelt } = await supabase
+        .from('profiles')
+        .select('id, user_id, belt_rank');
 
       const beltDistribution = (profilesBelt || []).reduce((acc: Record<string, number>, p: any) => {
-        const belt = studentsMap[p.user_id]?.belt_level || p.belt_rank || 'white';
+        const belt = p.belt_rank || 'white';
         acc[belt] = (acc[belt] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
