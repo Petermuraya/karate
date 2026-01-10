@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -316,9 +316,9 @@ export default function Auth() {
           </div>
 
           <div className="mt-8 text-center">
-            <a href="/" className="text-muted-foreground hover:text-foreground text-sm">
+            <Link to="/" className="text-muted-foreground hover:text-foreground text-sm">
               ← Back to home
-            </a>
+            </Link>
           </div>
         </motion.div>
       </div>
