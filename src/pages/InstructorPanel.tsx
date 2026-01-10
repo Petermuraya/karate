@@ -97,7 +97,7 @@ export default function InstructorPanel() {
         >
           {/* Top stats */}
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between shadow-sm">
               <div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Active Students</div>
                 <div className="text-xl sm:text-3xl font-medium text-foreground mt-1">{analyticsLoading ? '—' : analytics?.studentCount ?? 0}</div>
@@ -105,7 +105,7 @@ export default function InstructorPanel() {
               <Users className="w-6 sm:w-10 h-6 sm:h-10 text-primary" />
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between shadow-sm">
               <div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Upcoming Classes</div>
                 <div className="text-xl sm:text-3xl font-medium text-foreground mt-1">{analyticsLoading ? '—' : analytics?.classCount ?? 0}</div>
@@ -113,7 +113,7 @@ export default function InstructorPanel() {
               <Calendar className="w-6 sm:w-10 h-6 sm:h-10 text-primary" />
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between shadow-sm">
               <div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Monthly Attendance</div>
                 <div className="text-xl sm:text-3xl font-medium text-foreground mt-1">{analyticsLoading ? '—' : analytics?.monthlyAttendance ?? 0}</div>
@@ -149,7 +149,7 @@ export default function InstructorPanel() {
             </div>
 
             <div className="lg:col-span-1">
-              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Upload Training Video</div>
                   <div className="text-xs text-muted-foreground">Add a new training video to the library</div>
