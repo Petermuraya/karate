@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import InstructorSidebar from '@/components/admin/InstructorSidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import { useAnalytics } from '@/hooks/useAdminData';
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sidebar for large screens */}
         <div className="hidden lg:block lg:col-span-3">
-          <AdminSidebar />
+          <InstructorSidebar />
         </div>
 
         {/* Mobile animated drawer */}
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
                 role="dialog"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium">Admin</h3>
+                  <h3 className="font-medium">Instructor</h3>
                   <button
                     aria-label="Close menu"
                     className="p-2 rounded-md hover:bg-muted"
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M6 18L18 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
                 </div>
-                <AdminSidebar compact={false} />
+                <InstructorSidebar compact={false} />
               </motion.aside>
             </motion.div>
           )}
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:block">
-                <DashboardSwitcher current="admin" />
+                <DashboardSwitcher />
               </div>
               <Button variant="ghost" size="sm">Import</Button>
               <Button size="sm">New</Button>
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display text-lg text-foreground">Manage Classes</h2>
-                <Link to="/admin/classes" className="text-sm text-primary">Open Class Manager →</Link>
+                <Link to="/instructor/classes" className="text-sm text-primary">Open Class Manager →</Link>
               </div>
               <div className="overflow-auto max-h-[60vh]">
                 <ClassManager />
