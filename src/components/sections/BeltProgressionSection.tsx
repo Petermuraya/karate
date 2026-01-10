@@ -33,7 +33,11 @@ export const BeltProgressionSection = () => {
           </h2>
           <p className="mt-4 text-sm text-gray-400">Belts are awarded based on curriculum milestones and instructor evaluations. Belt assignment will be confirmed by your instructor.</p>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <ShareMenu title="Karate Belt Progression" description="Follow the path to mastery and share your journey." url={typeof window !== 'undefined' ? `${window.location.origin}/#belt-progression` : undefined} />
+            <ShareMenu
+              title="Karate Belt Progression"
+              description="Follow the path to mastery and share your journey."
+              url={typeof window !== 'undefined' ? `${window.location.origin}${import.meta.env.BASE_URL ?? '/'}#belt-progression` : undefined}
+            />
             <button className="px-3 py-2 bg-primary text-primary-foreground rounded">View full progression</button>
           </div>
         </motion.div>
