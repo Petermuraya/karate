@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -30,7 +30,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/karate">
         <AuthProvider>
           <Toaster />
           <Sonner />
@@ -46,62 +46,13 @@ const App = () => (
             <Route path="/instructor/classes" element={<InstructorManageClasses />} />
             <Route path="/instructor/profile" element={<InstructorProfileEdit />} />
             <Route path="/onboarding" element={<StudentOnboarding />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/classes"
-              element={
-                <AdminRoute>
-                  <AdminClasses />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminRoute>
-                  <AdminUsers />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/notifications"
-              element={
-                <AdminRoute>
-                  <AdminNotifications />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/gallery"
-              element={
-                <AdminRoute>
-                  <AdminGallery />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/reports"
-              element={
-                <AdminRoute>
-                  <AdminReports />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <AdminRoute>
-                  <AdminSettings />
-                </AdminRoute>
-              }
-            />
+            <Route path="/admin" element={<Navigate to="/instructor" replace />} />
+            <Route path="/admin/classes" element={<Navigate to="/instructor/classes" replace />} />
+            <Route path="/admin/users" element={<Navigate to="/instructor/users" replace />} />
+            <Route path="/admin/notifications" element={<Navigate to="/instructor" replace />} />
+            <Route path="/admin/gallery" element={<Navigate to="/instructor" replace />} />
+            <Route path="/admin/reports" element={<Navigate to="/instructor" replace />} />
+            <Route path="/admin/settings" element={<Navigate to="/instructor/profile" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
