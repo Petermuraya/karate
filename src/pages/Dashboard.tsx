@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { buildICS, googleCalendarUrl } from '@/lib/calendar';
 import { UpcomingClasses } from '@/components/dashboard/UpcomingClasses';
+import { MyEnrollments } from '@/components/dashboard/MyEnrollments';
 import { AnnouncementsCard } from '@/components/dashboard/AnnouncementsCard';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -65,6 +66,8 @@ export default function Dashboard() {
               startsAt={startsAt}
               isLoading={nextLoading}
             />
+            {/* My Enrolled Classes */}
+            <MyEnrollments />
             <UpcomingClasses />
             <AnnouncementsCard />
           </div>

@@ -1,13 +1,43 @@
 import { motion } from 'framer-motion';
 import { useUpcomingClasses } from '@/hooks/useClasses';
 import { useAuth } from '@/hooks/useAuth';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { useMyEnrollments, useEnrollInClass, useUnenrollFromClass } from '@/hooks/useEnrollments';
+import { Calendar, Clock, MapPin, UserPlus, UserMinus, CheckCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { buildICS, googleCalendarUrl } from '@/lib/calendar';
+import { useToast } from '@/hooks/use-toast';
 
 export function UpcomingClasses() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { data: classes, isLoading } = useUpcomingClasses(profile?.program);
+  const { data: myEnrollments } = useMyEnrollments();
+  const enrollMutation = useEnrollInClass();
+  const unenrollMutation = useUnenrollFromClass();
+  const { toast } = useToast();
+
+  const enrolledClassIds = new Set((myEnrollments || []).map(e => e.class_id));
+
+  const handleEnroll = async (classId: string, classTitle: string) => {
+    try {
+      await enrollMutation.mutateAsync(classId);
+      toast({ title: 'Enrolled!', description: `You're now enrolled in ${classTitle}` });
+    } catch (error: any) {
+      toast({ 
+        title: 'Enrollment failed', 
+        description: error.message?.includes('duplicate') ? 'Already enrolled in this class' : 'Could not enroll',
+        variant: 'destructive' 
+      });
+    }
+  };
+
+  const handleUnenroll = async (classId: string, classTitle: string) => {
+    try {
+      await unenrollMutation.mutateAsync(classId);
+      toast({ title: 'Unenrolled', description: `You've been removed from ${classTitle}` });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Could not unenroll', variant: 'destructive' });
+    }
+  };
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -94,7 +124,15 @@ export function UpcomingClasses() {
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">{cls.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">{cls.title}</h3>
+                    {enrolledClassIds.has(cls.id) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-600 text-xs font-medium">
+                        <CheckCircle className="w-3 h-3" />
+                        Enrolled
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
@@ -104,6 +142,12 @@ export function UpcomingClasses() {
                       <MapPin className="w-4 h-4" />
                       {cls.location}
                     </span>
+                    {cls.capacity && (
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {cls.capacity} spots
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -119,9 +163,37 @@ export function UpcomingClasses() {
                       {getDaysUntil(cls.day_of_week)}
                     </span>
                     {cls.level && (
-                      <p className="text-xs text-muted-foreground mt-1 capitalize">{cls.level}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{cls.level}</p>
                     )}
                   </div>
+
+                  {/* Enrollment Button */}
+                  {user && (
+                    <div className="mt-2">
+                      {enrolledClassIds.has(cls.id) ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUnenroll(cls.id, cls.title)}
+                          disabled={unenrollMutation.isPending}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <UserMinus className="w-4 h-4 mr-1" />
+                          Unenroll
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleEnroll(cls.id, cls.title)}
+                          disabled={enrollMutation.isPending}
+                        >
+                          <UserPlus className="w-4 h-4 mr-1" />
+                          Enroll
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
                     <Button
