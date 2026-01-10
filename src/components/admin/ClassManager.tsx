@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Clock, MapPin, Users, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useAllClasses, useCreateClass, useUpdateClass, useDeleteClass } from '@/hooks/useAdminData';
+import { useEnrollmentCounts, useClassEnrollments } from '@/hooks/useEnrollments';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const PROGRAMS = ['kids', 'teens', 'adults', 'family'];
@@ -43,6 +45,7 @@ const defaultFormData: ClassFormData = {
 
 export function ClassManager() {
   const { data: classes, isLoading } = useAllClasses();
+  const { data: enrollmentCounts } = useEnrollmentCounts();
   const createClass = useCreateClass();
   const updateClass = useUpdateClass();
   const deleteClass = useDeleteClass();
@@ -51,6 +54,7 @@ export function ClassManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<string | null>(null);
   const [formData, setFormData] = useState<ClassFormData>(defaultFormData);
+  const [viewEnrollmentsClassId, setViewEnrollmentsClassId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,6 +330,21 @@ export function ClassManager() {
                           </span>
                         </div>
                       </div>
+                      
+                      {/* Enrollment Count Badge */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setViewEnrollmentsClassId(cls.id)}
+                          className="gap-2"
+                        >
+                          <UserCheck className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold">{enrollmentCounts?.[cls.id] || 0}</span>
+                          <span className="text-muted-foreground">/ {cls.capacity}</span>
+                        </Button>
+                      </div>
+                      
                       <div className="flex items-center gap-2 sm:ml-4 sm:pl-4">
                         <div className="flex items-center gap-2 mr-0 sm:mr-4">
                           <Switch
@@ -361,6 +380,80 @@ export function ClassManager() {
           )}
         </div>
       )}
+
+      {/* Enrollment Viewer Dialog */}
+      <EnrollmentViewerDialog 
+        classId={viewEnrollmentsClassId} 
+        onClose={() => setViewEnrollmentsClassId(null)}
+        classes={classes || []}
+      />
     </div>
+  );
+}
+
+// Enrollment viewer component
+function EnrollmentViewerDialog({ 
+  classId, 
+  onClose, 
+  classes 
+}: { 
+  classId: string | null; 
+  onClose: () => void;
+  classes: any[];
+}) {
+  const { data: enrollments, isLoading } = useClassEnrollments(classId || '');
+  const classInfo = classes.find(c => c.id === classId);
+
+  if (!classId) return null;
+
+  return (
+    <Dialog open={!!classId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display tracking-wide">
+            ENROLLED STUDENTS
+          </DialogTitle>
+          {classInfo && (
+            <p className="text-sm text-muted-foreground">{classInfo.title} - {classInfo.day_of_week}</p>
+          )}
+        </DialogHeader>
+        
+        {isLoading ? (
+          <div className="py-8 text-center">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          </div>
+        ) : enrollments && enrollments.length > 0 ? (
+          <ScrollArea className="max-h-[300px]">
+            <div className="space-y-2">
+              {enrollments.map((enrollment: any) => (
+                <div 
+                  key={enrollment.id} 
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {enrollment.profiles?.full_name || 'Unknown'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {enrollment.profiles?.email}
+                    </p>
+                  </div>
+                  {enrollment.profiles?.belt_rank && (
+                    <Badge variant="outline" className="capitalize">
+                      {enrollment.profiles.belt_rank} belt
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="py-8 text-center text-muted-foreground">
+            <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-50" />
+            <p>No students enrolled yet</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
