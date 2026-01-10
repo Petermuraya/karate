@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import useNotifications from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
-import { Bell, Menu, X, LogOut, User, Home } from 'lucide-react';
+import { Bell, Menu, X, LogOut, User, Home, Video, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import DashboardSwitcher from '@/components/admin/DashboardSwitcher';
 
 export function DashboardHeader() {
   const { profile, signOut } = useAuth();
@@ -58,11 +59,22 @@ export function DashboardHeader() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             <Link to="/" className="text-muted-foreground hover:text-foreground flex items-center gap-2">
               <Home className="w-4 h-4" />
               Home
             </Link>
+            <Link to="/videos" className="text-muted-foreground hover:text-foreground flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              Videos
+            </Link>
+            <Link to="/profile" className="text-muted-foreground hover:text-foreground flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Profile
+            </Link>
+            
+            {/* Instructor Panel Switcher */}
+            <DashboardSwitcher />
             
             {/* Notifications */}
             <div className="relative">
