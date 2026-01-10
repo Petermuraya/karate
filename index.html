@@ -25,6 +25,20 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      (function(){
+        try {
+          const params = new URLSearchParams(location.search);
+          const p = params.get('p');
+          if (p) {
+            const decoded = decodeURIComponent(p);
+            history.replaceState({}, '', decoded + location.hash);
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
