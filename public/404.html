@@ -1,19 +1,26 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0;url=/karate/" />
-    <script>
-      // Fallback redirect for GitHub Pages when using SPA origins
-      (function () {
-        var path = window.location.pathname + window.location.search + window.location.hash;
-        // Force redirect to index preserving hash if present
-        window.location.replace('/karate/' + (window.location.hash || ''));
-      })();
-    </script>
-    <title>Redirecting…</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 Not Found</title>
+    <meta name="robots" content="noindex" />
   </head>
   <body>
-    <p>Redirecting to <a href="/karate/">app</a>…</p>
+    <script>
+      // SPA redirect for GitHub Pages project site
+      (function () {
+        try {
+          var path = window.location.pathname + window.location.search + window.location.hash;
+          var repo = '/karate';
+          var target = repo + '/index.html?p=' + encodeURIComponent(path);
+          window.location.replace(target);
+        } catch (e) {
+          // fallback to site root
+          window.location.replace('/karate/');
+        }
+      })();
+    </script>
   </body>
 </html>
