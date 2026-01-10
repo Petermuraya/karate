@@ -80,7 +80,7 @@ export const Header = () => {
               <>
                 {isAdmin && (
                   <Link to="/instructor">
-                    <Button variant="secondary" size="sm">Instructor</Button>
+                    <Button variant="secondary" size="sm" className="px-3">Instructor</Button>
                   </Link>
                 )}
                 <Link to="/dashboard">
@@ -151,19 +151,45 @@ export const Header = () => {
             className="lg:hidden border-t border-border bg-background overflow-hidden"
           >
             <nav className="container-custom px-6 py-6 space-y-4">
-              {["Programs", "Instructor", "Philosophy", "Schedule", "Gallery", "Contact"].map((item, i) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="block text-lg font-display tracking-wider hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item}
-                </motion.a>
-              ))}
+              {[
+                'Programs',
+                'Instructor',
+                'Philosophy',
+                'Schedule',
+                'Gallery',
+                'Contact'
+              ].map((item, i) => {
+                if (item === 'Instructor') {
+                  const MotionLink = motion(Link as any);
+                  return (
+                    <MotionLink
+                      key={item}
+                      to="/instructor"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="block text-lg font-display tracking-wider hover:text-primary transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item}
+                    </MotionLink>
+                  );
+                }
+
+                return (
+                  <motion.a
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="block text-lg font-display tracking-wider hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item}
+                  </motion.a>
+                );
+              })}
               <div className="pt-4 border-t border-border flex flex-col gap-3">
                 <div className="flex items-center justify-end">
                   <NotificationsDropdown />
