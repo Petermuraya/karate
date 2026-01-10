@@ -79,8 +79,8 @@ export const Header = () => {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="secondary" size="sm">Admin</Button>
+                  <Link to="/instructor">
+                    <Button variant="secondary" size="sm">Instructor</Button>
                   </Link>
                 )}
                 <Link to="/dashboard">
@@ -115,8 +115,8 @@ export const Header = () => {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="ghost" size="icon" title="Admin"><User className="w-5 h-5" /></Button>
+                  <Link to="/instructor">
+                    <Button variant="ghost" size="icon" title="Instructor"><User className="w-5 h-5" /></Button>
                   </Link>
                 )}
                 <Link to="/dashboard">
@@ -171,8 +171,8 @@ export const Header = () => {
                 {user ? (
                   <>
                     {isAdmin && (
-                      <Link to="/admin" onClick={() => setIsOpen(false)}>
-                        <Button variant="outline" className="w-full">Admin</Button>
+                      <Link to="/instructor" onClick={() => setIsOpen(false)}>
+                        <Button variant="outline" className="w-full">Instructor</Button>
                       </Link>
                     )}
                     <Link to="/dashboard" onClick={() => setIsOpen(false)}>
